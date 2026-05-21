@@ -79,6 +79,22 @@ export async function createOrderFromCart(
   const delivery_fee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   const total = subtotal + delivery_fee;
 
+  // 4.5) Reserve capacity for today (next-day delivery later in Phase 2)
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const { data: reserved, error: capErr } = await supabase.rpc(
+    'try_reserve_capacity',
+    { target_date: todayStr }
+  );
+  if (capErr) {
+    console.warn('Capacity reserve error (non-fatal):', capErr.message);
+  } else if (reserved === false) {
+    return {
+      ok: false,
+      error:
+        'Өнөөдөр захиалгын хязгаар дүүрсэн байна. Бид удахгүй ажилладаг болно. Дараа дахин оролдоно уу.',
+    };
+  }
+
   // 5) Insert order
   const { data: order, error: orderErr } = await supabase
     .from('orders')

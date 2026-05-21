@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { createAddress } from '@/app/account/addresses/actions';
+import { createAddress } from '@/app/(shop)/account/addresses/actions';
 
 export function AddressForm({ onCreated }: { onCreated?: () => void }) {
   const [error, setError] = useState<string | null>(null);

@@ -122,6 +122,33 @@ export type Database = {
           },
         ]
       }
+      daily_capacity: {
+        Row: {
+          closed: boolean
+          current_orders: number
+          date: string
+          max_orders: number
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          closed?: boolean
+          current_orders?: number
+          date: string
+          max_orders?: number
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          closed?: boolean
+          current_orders?: number
+          date?: string
+          max_orders?: number
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           order_id: number
@@ -277,6 +304,7 @@ export type Database = {
           name: string
           phone: string | null
           provider: string | null
+          role: string
           updated_at: string
         }
         Insert: {
@@ -287,6 +315,7 @@ export type Database = {
           name: string
           phone?: string | null
           provider?: string | null
+          role?: string
           updated_at?: string
         }
         Update: {
@@ -297,6 +326,7 @@ export type Database = {
           name?: string
           phone?: string | null
           provider?: string | null
+          role?: string
           updated_at?: string
         }
         Relationships: []
@@ -332,8 +362,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      is_admin: { Args: never; Returns: boolean }
       merge_guest_cart: { Args: { items: Json }; Returns: undefined }
+      release_capacity: { Args: { target_date: string }; Returns: undefined }
       set_default_address: { Args: { addr_id: number }; Returns: undefined }
+      try_reserve_capacity: { Args: { target_date: string }; Returns: boolean }
     }
     Enums: {
       order_status:
@@ -495,6 +528,7 @@ export type WishlistItem = Database['public']['Tables']['wishlist_items']['Row']
 export type Address = Database['public']['Tables']['addresses']['Row'];
 export type Order = Database['public']['Tables']['orders']['Row'];
 export type OrderItem = Database['public']['Tables']['order_items']['Row'];
+export type DailyCapacity = Database['public']['Tables']['daily_capacity']['Row'];
 export type OrderStatus = Database['public']['Enums']['order_status'];
 
 // Legacy Row-suffixed aliases (for backward compatibility with earlier components)

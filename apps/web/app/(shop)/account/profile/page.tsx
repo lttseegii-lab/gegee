@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { signOut } from '@/app/auth/actions';
+import { signOut } from '@/app/(shop)/auth/actions';
 
 export const metadata = { title: 'Хувийн мэдээлэл' };
 

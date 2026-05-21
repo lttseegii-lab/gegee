@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { createOrderFromCart } from '@/app/checkout/actions';
+import { createOrderFromCart } from '@/app/(shop)/checkout/actions';
 import type { AddressRow } from '@/types/database';
 import { useCartStore } from '@/stores/cartStore';
 

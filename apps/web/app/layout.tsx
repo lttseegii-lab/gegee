@@ -1,8 +1,4 @@
 import type { Metadata } from 'next';
-import { MainHeader } from '@/components/header/MainHeader';
-import { SiteFooter } from '@/components/header/SiteFooter';
-import { CartProvider } from '@/components/cart/CartProvider';
-import { CartDrawer } from '@/components/cart/CartDrawer';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
@@ -30,14 +26,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="mn">
-      <body>
-        <CartProvider>
-          <MainHeader />
-          {children}
-          <SiteFooter />
-          <CartDrawer />
-        </CartProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
