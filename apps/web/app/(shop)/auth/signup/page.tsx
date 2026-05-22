@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { signUpWithEmail, signInWithOAuth } from '../actions';
+import { OAUTH_PROVIDERS, ANY_OAUTH_ENABLED } from '@/lib/auth/providers';
 
 export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
@@ -26,31 +27,39 @@ export default function SignupPage() {
         Gegeen Memory Garden, rewards, AI concierge ашиглахын тулд
       </p>
 
-      <div className="space-y-3 mb-6">
-        <button
-          type="button"
-          onClick={() => signInWithOAuth('google')}
-          className="w-full border border-border rounded-full py-3 text-sm font-medium hover:border-ink transition-colors"
-        >
-          Google-ээр үргэлжлүүлэх
-        </button>
-        <button
-          type="button"
-          onClick={() => signInWithOAuth('facebook')}
-          className="w-full border border-border rounded-full py-3 text-sm font-medium hover:border-ink transition-colors"
-        >
-          Facebook-ээр үргэлжлүүлэх
-        </button>
-      </div>
+      {ANY_OAUTH_ENABLED && (
+        <>
+          <div className="space-y-3 mb-6">
+            {OAUTH_PROVIDERS.google && (
+              <button
+                type="button"
+                onClick={() => signInWithOAuth('google')}
+                className="w-full border border-border rounded-full py-3 text-sm font-medium hover:border-ink transition-colors"
+              >
+                Google-ээр үргэлжлүүлэх
+              </button>
+            )}
+            {OAUTH_PROVIDERS.facebook && (
+              <button
+                type="button"
+                onClick={() => signInWithOAuth('facebook')}
+                className="w-full border border-border rounded-full py-3 text-sm font-medium hover:border-ink transition-colors"
+              >
+                Facebook-ээр үргэлжлүүлэх
+              </button>
+            )}
+          </div>
 
-      <div className="relative my-8">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs">
-          <span className="bg-white px-3 text-ink/40">эсвэл имэйлээр</span>
-        </div>
-      </div>
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-white px-3 text-ink/40">эсвэл имэйлээр</span>
+            </div>
+          </div>
+        </>
+      )}
 
       <form action={handleSubmit} className="space-y-4">
         <div>

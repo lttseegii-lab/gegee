@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { signInWithEmail, signInWithOAuth } from '../actions';
+import { OAUTH_PROVIDERS, ANY_OAUTH_ENABLED } from '@/lib/auth/providers';
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -23,31 +24,39 @@ export default function LoginPage() {
         Gegeen-д тавтай морилно уу
       </p>
 
-      <div className="space-y-3 mb-6">
-        <button
-          type="button"
-          onClick={() => signInWithOAuth('google')}
-          className="w-full border border-border rounded-full py-3 text-sm font-medium hover:border-ink transition-colors flex items-center justify-center gap-2"
-        >
-          Google-ээр нэвтрэх
-        </button>
-        <button
-          type="button"
-          onClick={() => signInWithOAuth('facebook')}
-          className="w-full border border-border rounded-full py-3 text-sm font-medium hover:border-ink transition-colors flex items-center justify-center gap-2"
-        >
-          Facebook-ээр нэвтрэх
-        </button>
-      </div>
+      {ANY_OAUTH_ENABLED && (
+        <>
+          <div className="space-y-3 mb-6">
+            {OAUTH_PROVIDERS.google && (
+              <button
+                type="button"
+                onClick={() => signInWithOAuth('google')}
+                className="w-full border border-border rounded-full py-3 text-sm font-medium hover:border-ink transition-colors flex items-center justify-center gap-2"
+              >
+                Google-ээр нэвтрэх
+              </button>
+            )}
+            {OAUTH_PROVIDERS.facebook && (
+              <button
+                type="button"
+                onClick={() => signInWithOAuth('facebook')}
+                className="w-full border border-border rounded-full py-3 text-sm font-medium hover:border-ink transition-colors flex items-center justify-center gap-2"
+              >
+                Facebook-ээр нэвтрэх
+              </button>
+            )}
+          </div>
 
-      <div className="relative my-8">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs">
-          <span className="bg-white px-3 text-ink/40">эсвэл имэйлээр</span>
-        </div>
-      </div>
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-white px-3 text-ink/40">эсвэл имэйлээр</span>
+            </div>
+          </div>
+        </>
+      )}
 
       <form action={handleSubmit} className="space-y-4">
         <div>
