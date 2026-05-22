@@ -387,6 +387,65 @@ export type Database = {
         }
         Relationships: []
       }
+      rewards_ledger: {
+        Row: {
+          created_at: string
+          id: number
+          order_id: number | null
+          points: number
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          order_id?: number | null
+          points: number
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          order_id?: number | null
+          points?: number
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rewards_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_rewards: {
+        Row: {
+          tier: string | null
+          total_points: number
+          total_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          tier?: string | null
+          total_points?: number
+          total_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          tier?: string | null
+          total_points?: number
+          total_spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wishlist_items: {
         Row: {
           added_at: string | null
@@ -599,6 +658,8 @@ export type Order = Database['public']['Tables']['orders']['Row'];
 export type OrderItem = Database['public']['Tables']['order_items']['Row'];
 export type DailyCapacity = Database['public']['Tables']['daily_capacity']['Row'];
 export type MemoryDate = Database['public']['Tables']['memory_dates']['Row'];
+export type UserRewards = Database['public']['Tables']['user_rewards']['Row'];
+export type RewardsLedger = Database['public']['Tables']['rewards_ledger']['Row'];
 export type OrderStatus = Database['public']['Enums']['order_status'];
 
 // Legacy Row-suffixed aliases

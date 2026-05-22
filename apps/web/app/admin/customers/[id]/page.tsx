@@ -36,7 +36,12 @@ export default async function CustomerDetailPage({
     .single();
   if (!profile) notFound();
 
-  const [{ data: addresses }, { data: orders }] = await Promise.all([
+  const [
+    { data: addresses },
+    { data: orders },
+    { data: rewards },
+    { data: memoryDates },
+  ] = await Promise.all([
     supabase
       .from('addresses')
       .select('*')
@@ -47,6 +52,17 @@ export default async function CustomerDetailPage({
       .select('id, order_code, total, status, created_at')
       .eq('user_id', params.id)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('user_rewards')
+      .select('total_points, total_spent, tier')
+      .eq('user_id', params.id)
+      .maybeSingle(),
+    supabase
+      .from('memory_dates')
+      .select('id, name, month, day, occasion, reminders_enabled')
+      .eq('user_id', params.id)
+      .order('month')
+      .order('day'),
   ]);
 
   const totalSpent = (orders ?? [])
@@ -95,6 +111,11 @@ export default async function CustomerDetailPage({
           <div className="text-xs text-ink/50 mt-1">
             {(orders ?? []).length} захиалга · {avgOrder.toLocaleString()}₮ дундаж
           </div>
+          {rewards && (
+            <div className="text-xs text-ink/60 mt-2">
+              {rewards.tier} tier · {(rewards.total_points ?? 0).toLocaleString()} оноо
+            </div>
+          )}
         </div>
       </header>
 
@@ -156,6 +177,34 @@ export default async function CustomerDetailPage({
           </div>
         )}
       </section>
+
+      {/* Memory Garden */}
+      {memoryDates && memoryDates.length > 0 && (
+        <section className="mb-10">
+          <h2 className="font-medium text-lg mb-4">
+            Memory Garden ({memoryDates.length})
+          </h2>
+          <ul className="grid sm:grid-cols-2 gap-3">
+            {memoryDates.map((m) => (
+              <li
+                key={m.id}
+                className="bg-white border border-border rounded-card p-4 text-sm"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{m.name}</span>
+                  <span className="text-xs text-ink/40">
+                    {m.month}/{m.day}
+                  </span>
+                </div>
+                <div className="text-xs text-ink/60 mt-1">
+                  {m.occasion}
+                  {!m.reminders_enabled && ' · 🔕'}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Addresses */}
       <section>

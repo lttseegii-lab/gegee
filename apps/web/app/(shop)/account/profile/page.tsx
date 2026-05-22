@@ -54,12 +54,22 @@ export default async function ProfilePage() {
         </Link>
         <Link
           href="/account/memory-garden"
-          className="border border-border rounded-card p-6 hover:border-ink transition-colors sm:col-span-2"
+          className="border border-border rounded-card p-6 hover:border-ink transition-colors"
         >
           <div className="text-2xl mb-2">✻</div>
           <h3 className="font-medium mb-1">Memory Garden</h3>
           <p className="text-sm text-ink/60">
-            Чухал огноо хадгалж, AI цэцэг ойртохоос өмнө санал болгоно
+            Чухал огноо + AI санал
+          </p>
+        </Link>
+        <Link
+          href="/account/rewards"
+          className="border border-border rounded-card p-6 hover:border-ink transition-colors"
+        >
+          <div className="text-2xl mb-2">🌸</div>
+          <h3 className="font-medium mb-1">Rewards</h3>
+          <p className="text-sm text-ink/60">
+            Loyalty оноо ба tier
           </p>
         </Link>
       </div>
