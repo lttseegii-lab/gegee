@@ -52,6 +52,16 @@ export default async function ProfilePage() {
           <h3 className="font-medium mb-1">Хаяг</h3>
           <p className="text-sm text-ink/60">Хүргэлтийн хаягууд</p>
         </Link>
+        <Link
+          href="/account/memory-garden"
+          className="border border-border rounded-card p-6 hover:border-ink transition-colors sm:col-span-2"
+        >
+          <div className="text-2xl mb-2">✻</div>
+          <h3 className="font-medium mb-1">Memory Garden</h3>
+          <p className="text-sm text-ink/60">
+            Чухал огноо хадгалж, AI цэцэг ойртохоос өмнө санал болгоно
+          </p>
+        </Link>
       </div>
 
       <div className="border border-border rounded-card p-6 mb-10">

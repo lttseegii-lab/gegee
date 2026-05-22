@@ -149,6 +149,62 @@ export type Database = {
         }
         Relationships: []
       }
+      memory_dates: {
+        Row: {
+          ai_suggested_product_id: string | null
+          created_at: string
+          day: number
+          id: number
+          month: number
+          name: string
+          notes: string | null
+          occasion: string
+          remind_days_before: number[] | null
+          reminders_enabled: boolean
+          updated_at: string
+          user_id: string
+          year: number | null
+        }
+        Insert: {
+          ai_suggested_product_id?: string | null
+          created_at?: string
+          day: number
+          id?: number
+          month: number
+          name: string
+          notes?: string | null
+          occasion: string
+          remind_days_before?: number[] | null
+          reminders_enabled?: boolean
+          updated_at?: string
+          user_id: string
+          year?: number | null
+        }
+        Update: {
+          ai_suggested_product_id?: string | null
+          created_at?: string
+          day?: number
+          id?: number
+          month?: number
+          name?: string
+          notes?: string | null
+          occasion?: string
+          remind_days_before?: number[] | null
+          reminders_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memory_dates_ai_suggested_product_id_fkey"
+            columns: ["ai_suggested_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           order_id: number
@@ -367,6 +423,19 @@ export type Database = {
       release_capacity: { Args: { target_date: string }; Returns: undefined }
       set_default_address: { Args: { addr_id: number }; Returns: undefined }
       try_reserve_capacity: { Args: { target_date: string }; Returns: boolean }
+      upcoming_memory_dates: {
+        Args: { lookahead_days?: number }
+        Returns: {
+          ai_suggested_product_id: string
+          days_until: number
+          id: number
+          name: string
+          next_occurrence: string
+          notes: string
+          occasion: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       order_status:
@@ -529,9 +598,10 @@ export type Address = Database['public']['Tables']['addresses']['Row'];
 export type Order = Database['public']['Tables']['orders']['Row'];
 export type OrderItem = Database['public']['Tables']['order_items']['Row'];
 export type DailyCapacity = Database['public']['Tables']['daily_capacity']['Row'];
+export type MemoryDate = Database['public']['Tables']['memory_dates']['Row'];
 export type OrderStatus = Database['public']['Enums']['order_status'];
 
-// Legacy Row-suffixed aliases (for backward compatibility with earlier components)
+// Legacy Row-suffixed aliases
 export type ProfileRow = Profile;
 export type ProductRow = Product;
 export type CartItemRow = CartItem;
