@@ -422,6 +422,24 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       user_rewards: {
         Row: {
           tier: string | null
@@ -660,6 +678,7 @@ export type DailyCapacity = Database['public']['Tables']['daily_capacity']['Row'
 export type MemoryDate = Database['public']['Tables']['memory_dates']['Row'];
 export type UserRewards = Database['public']['Tables']['user_rewards']['Row'];
 export type RewardsLedger = Database['public']['Tables']['rewards_ledger']['Row'];
+export type SiteSetting = Database['public']['Tables']['site_settings']['Row'];
 export type OrderStatus = Database['public']['Enums']['order_status'];
 
 // Legacy Row-suffixed aliases

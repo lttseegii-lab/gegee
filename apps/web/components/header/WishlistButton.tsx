@@ -1,38 +1,35 @@
 'use client';
 
-import { useCartCount, useCartStore } from '@/stores/cartStore';
+import Link from 'next/link';
+import { useWishlistCount } from '@/stores/wishlistStore';
 
-export function CartButton() {
-  const count = useCartCount();
-  const open = useCartStore((s) => s.open);
+export function WishlistButton() {
+  const count = useWishlistCount();
 
   return (
-    <button
-      type="button"
-      onClick={open}
+    <Link
+      href="/account/wishlist"
       className="relative inline-flex items-center text-ink hover:text-pinkHot transition-colors"
-      aria-label={`Сагс — ${count} бүтээгдэхүүн`}
-      title="Сагс"
+      aria-label={`Хадгалсан — ${count} бүтээгдэхүүн`}
+      title="Хадгалсан"
     >
       <svg
         width="22"
         height="22"
         viewBox="0 0 24 24"
-        fill="none"
+        fill={count > 0 ? 'currentColor' : 'none'}
         stroke="currentColor"
         strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-        <line x1="3" y1="6" x2="21" y2="6" />
-        <path d="M16 10a4 4 0 0 1-8 0" />
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
       </svg>
       {count > 0 && (
         <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-pinkHot text-white text-[10px] font-semibold flex items-center justify-center">
           {count}
         </span>
       )}
-    </button>
+    </Link>
   );
 }

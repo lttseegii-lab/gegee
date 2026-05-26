@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { productImageUrl } from '@/lib/ai/pollinations';
 import { AddToCartButton } from '@/components/cart/AddToCartButton';
+import { HeartButton } from '@/components/product/HeartButton';
 import type { Product } from '@/types/database';
 
 const BADGE_STYLES: Record<string, string> = {
@@ -46,10 +47,13 @@ export function ProductCard({ product }: { product: Product }) {
           </span>
         )}
         {product.pet_safe && (
-          <span className="absolute top-3 right-3 px-2 py-1 rounded-full text-[10px] font-medium bg-white/90 text-ink">
+          <span className="absolute bottom-3 left-3 px-2 py-1 rounded-full text-[10px] font-medium bg-white/90 text-ink">
             🐾 Pet-safe
           </span>
         )}
+        <div className="absolute top-3 right-3">
+          <HeartButton productId={product.id} size="sm" />
+        </div>
       </div>
 
       <div className="p-4">

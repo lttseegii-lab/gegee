@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useCartStore } from '@/stores/cartStore';
+import { useWishlistStore } from '@/stores/wishlistStore';
 import { createClient } from '@/lib/supabase/client';
 
 /**
@@ -9,34 +10,46 @@ import { createClient } from '@/lib/supabase/client';
  * and subscribes to realtime changes for cross-device sync.
  *
  * Also merges localStorage cart into server on SIGNED_IN.
+ *
+ * Strict-mode safe: uses a per-mount unique channel name + cancelled guard
+ * so React 18 double-invoke in dev doesn't try to .on() an already-subscribed
+ * channel (which Supabase Realtime forbids).
  */
 export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const supabase = createClient();
+    let cancelled = false;
+    let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
 
-    // Initial hydrate
+    // Initial hydrate (cart + wishlist in parallel)
     useCartStore.getState().hydrate();
+    useWishlistStore.getState().hydrate();
 
-    // Auth state listener — merge guest cart on login
+    // Auth state listener — merge guest cart + wishlist on login
     const { data: subscription } = supabase.auth.onAuthStateChange(
       async (event) => {
         if (event === 'SIGNED_IN') {
-          await useCartStore.getState().mergeToServer();
+          await Promise.all([
+            useCartStore.getState().mergeToServer(),
+            useWishlistStore.getState().mergeToServer(),
+          ]);
         } else if (event === 'SIGNED_OUT') {
-          // Clear local cart on signout for privacy
-          // (alternative: keep as guest cart)
-          await useCartStore.getState().refresh();
+          await Promise.all([
+            useCartStore.getState().refresh(),
+            useWishlistStore.getState().refresh(),
+          ]);
         }
       }
     );
 
-    // Realtime cart sync — listen for changes from other devices
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    // Realtime cart sync — unique channel per mount avoids strict-mode collisions
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      channel = supabase
-        .channel('cart-sync')
+      if (cancelled || !user) return;
+
+      const channelName = `cart-sync-${user.id}-${Math.random().toString(36).slice(2, 8)}`;
+      const ch = supabase
+        .channel(channelName)
         .on(
           'postgres_changes',
           {
@@ -50,11 +63,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           }
         )
         .subscribe();
+
+      if (cancelled) {
+        supabase.removeChannel(ch);
+        return;
+      }
+      realtimeChannel = ch;
     })();
 
     return () => {
+      cancelled = true;
       subscription.subscription.unsubscribe();
-      if (channel) channel.unsubscribe();
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+      }
     };
   }, []);
 

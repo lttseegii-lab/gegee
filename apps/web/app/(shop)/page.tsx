@@ -29,7 +29,7 @@ export default async function HomePage() {
         <div className="max-w-container mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <p className="text-[13px] uppercase tracking-[0.2em] text-ink/60 mb-4">
-              AI Atelier · est. 2026
+              est. 2026
             </p>
             <h1 className="font-serif text-5xl lg:text-6xl leading-[1.05] text-ink">
               Цэцэг илгээ. <em className="font-serif italic">Урлагийг задал.</em>

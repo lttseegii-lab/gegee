@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: '/admin/products', label: 'Бүтээгдэхүүн', icon: '🌸' },
   { href: '/admin/customers', label: 'Хэрэглэгч', icon: '👥' },
   { href: '/admin/capacity', label: 'Capacity', icon: '📅' },
+  { href: '/admin/theme', label: 'Theme', icon: '🎨' },
 ];
 
 export function AdminSidebar({ adminName }: { adminName: string }) {

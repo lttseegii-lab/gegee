@@ -10,9 +10,23 @@ export async function UserMenu() {
     return (
       <Link
         href="/auth/login"
-        className="text-sm text-ink hover:text-pinkHot"
+        className="text-ink hover:text-pinkHot transition-colors inline-flex items-center"
+        aria-label="Нэвтрэх"
+        title="Нэвтрэх"
       >
-        Нэвтрэх
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
       </Link>
     );
   }
@@ -28,13 +42,12 @@ export async function UserMenu() {
   return (
     <Link
       href="/account/profile"
-      className="flex items-center gap-2 text-sm hover:text-pinkHot transition-colors"
+      className="inline-flex items-center hover:text-pinkHot transition-colors"
+      aria-label="Хувийн мэдээлэл"
+      title={profile?.name ?? user.email ?? 'Profile'}
     >
       <span className="w-7 h-7 rounded-full bg-lilac flex items-center justify-center text-[12px] font-semibold">
         {initial}
-      </span>
-      <span className="hidden sm:inline">
-        {profile?.name?.split(' ')[0] ?? 'Profile'}
       </span>
     </Link>
   );

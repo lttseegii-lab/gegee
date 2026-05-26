@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -9,37 +9,29 @@ import {
   calcDelivery,
   FREE_DELIVERY_THRESHOLD,
 } from '@/stores/cartStore';
-import { createClient } from '@/lib/supabase/client';
 import { productImageUrl } from '@/lib/ai/pollinations';
-import type { Product } from '@/types/database';
 
 export function CartDrawer() {
   const isOpen = useCartStore((s) => s.isOpen);
   const close = useCartStore((s) => s.close);
   const items = useCartStore((s) => s.items);
+  const productsRecord = useCartStore((s) => s.products);
   const setQty = useCartStore((s) => s.setQty);
   const remove = useCartStore((s) => s.remove);
+  const refreshProducts = useCartStore((s) => s.refreshProducts);
 
-  const [products, setProducts] = useState<Map<string, Product>>(new Map());
+  // Convert products record to Map (compatible with calcSubtotal)
+  const products = new Map(Object.entries(productsRecord));
 
-  // Fetch product details whenever cart items change
+  // If drawer is open and we have items but no product details, re-fetch.
+  // Handles the case where the user signed in after items were hydrated.
   useEffect(() => {
-    if (items.length === 0) {
-      setProducts(new Map());
-      return;
+    if (!isOpen || items.length === 0) return;
+    const missing = items.some((i) => !productsRecord[i.productId]);
+    if (missing) {
+      refreshProducts();
     }
-    const supabase = createClient();
-    const ids = items.map((i) => i.productId);
-    supabase
-      .from('products')
-      .select('*')
-      .in('id', ids)
-      .then(({ data }) => {
-        const map = new Map<string, Product>();
-        (data ?? []).forEach((p) => map.set(p.id, p));
-        setProducts(map);
-      });
-  }, [items]);
+  }, [isOpen, items, productsRecord, refreshProducts]);
 
   const subtotal = calcSubtotal(items, products);
   const delivery = calcDelivery(subtotal);
@@ -78,7 +70,14 @@ export function CartDrawer() {
         aria-label="Сагс"
       >
         <header className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
-          <h2 className="font-serif italic text-2xl">Сагс</h2>
+          <div className="flex items-baseline gap-2">
+            <h2 className="font-serif italic text-2xl">Сагс</h2>
+            {items.length > 0 && (
+              <span className="text-sm text-ink/50">
+                {items.reduce((sum, i) => sum + i.qty, 0)} ширхэг
+              </span>
+            )}
+          </div>
           <button
             type="button"
             onClick={close}
@@ -110,40 +109,49 @@ export function CartDrawer() {
                   );
                 }
                 return (
-                  <li key={item.productId} className="p-4 flex gap-3">
-                    <div className="relative w-20 h-20 flex-shrink-0 rounded bg-lilac/40 overflow-hidden">
+                  <li key={item.productId} className="p-5 flex gap-4">
+                    <div className="relative w-24 h-24 flex-shrink-0 rounded-lg bg-lilac/40 overflow-hidden">
                       <Image
-                        src={productImageUrl(p, 160, 160)}
+                        src={productImageUrl(p, 200, 200)}
                         alt={p.name}
                         fill
-                        sizes="80px"
+                        sizes="96px"
                         className="object-cover"
                         unoptimized
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm truncate">{p.name}</h4>
-                      <div className="text-xs text-ink/60 mt-0.5">
-                        {p.price.toLocaleString()}₮
+                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-medium text-sm leading-tight line-clamp-2">
+                            {p.name}
+                          </h4>
+                          <span className="text-sm font-semibold whitespace-nowrap">
+                            {(p.price * item.qty).toLocaleString()}₮
+                          </span>
+                        </div>
+                        <div className="text-xs text-ink/50 mt-1">
+                          {p.price.toLocaleString()}₮ × {item.qty}
+                        </div>
                       </div>
-                      <div className="mt-2 flex items-center gap-3">
-                        <div className="flex items-center border border-border rounded">
+                      <div className="flex items-center justify-between gap-2 mt-2">
+                        <div className="flex items-center border border-border rounded-full">
                           <button
                             type="button"
                             onClick={() => setQty(p.id, item.qty - 1)}
-                            className="w-7 h-7 hover:bg-offwhite"
+                            className="w-7 h-7 hover:bg-offwhite rounded-l-full text-sm"
                             aria-label="Багасгах"
                           >
                             −
                           </button>
-                          <span className="w-7 text-center text-sm">
+                          <span className="w-7 text-center text-sm font-medium">
                             {item.qty}
                           </span>
                           <button
                             type="button"
                             onClick={() => setQty(p.id, item.qty + 1)}
                             disabled={item.qty >= 20}
-                            className="w-7 h-7 hover:bg-offwhite disabled:opacity-30"
+                            className="w-7 h-7 hover:bg-offwhite disabled:opacity-30 rounded-r-full text-sm"
                             aria-label="Нэмэх"
                           >
                             +
@@ -153,13 +161,11 @@ export function CartDrawer() {
                           type="button"
                           onClick={() => remove(p.id)}
                           className="text-xs text-ink/40 hover:text-pinkHot"
+                          aria-label="Хасах"
                         >
-                          Хасах
+                          Устгах
                         </button>
                       </div>
-                    </div>
-                    <div className="text-sm font-semibold whitespace-nowrap">
-                      {(p.price * item.qty).toLocaleString()}₮
                     </div>
                   </li>
                 );

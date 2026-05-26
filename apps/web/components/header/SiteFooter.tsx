@@ -32,7 +32,7 @@ export function SiteFooter() {
             Gegeen <span className="text-pinkHot">✻</span>
           </div>
           <p className="text-sm text-ink/60 max-w-sm">
-            AI Atelier — мэдрэхүйг ойлгодог цэцгийн худалдаа. Care wildly.
+            Мэдрэхүйг ойлгодог цэцгийн худалдаа. Care wildly.
           </p>
           <div className="mt-6 flex gap-4 text-sm text-ink/60">
             <span>★ 4.9 / 5</span>

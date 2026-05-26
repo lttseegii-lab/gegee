@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import {
   CATALOG_CONFIG,
@@ -10,7 +9,6 @@ import {
   type FilterDef,
 } from '@/lib/catalog';
 import { ProductGrid } from '@/components/product/ProductGrid';
-import { FilterChips } from '@/components/catalog/FilterChips';
 import { SortDropdown } from '@/components/catalog/SortDropdown';
 
 const VALID_CATEGORIES: CategoryKey[] = [
@@ -67,16 +65,6 @@ export default async function CatalogPage({
 
   const allProducts = baseProducts ?? [];
 
-  // Compute counts for every filter chip (against base product set)
-  const counts: Record<string, number> = {};
-  for (const f of cfg.filters) {
-    if (f === '__div__') continue;
-    counts[f.key] =
-      f.key === 'all'
-        ? allProducts.length
-        : allProducts.filter((p) => matchesFilter(p, f)).length;
-  }
-
   // Apply current filter + sort
   const activeFilterDef =
     (cfg.filters.find(
@@ -87,39 +75,20 @@ export default async function CatalogPage({
   const products = sortProducts(filtered, sortBy);
 
   return (
-    <>
-      {/* Breadcrumb */}
-      <nav className="bg-white border-b border-border h-[52px] flex items-center">
-        <div className="max-w-container mx-auto px-6 flex items-center gap-2 text-[13px] text-ink/60">
-          <Link href="/" className="hover:text-ink">
-            Нүүр
-          </Link>
-          <span className="text-ink/30">›</span>
-          <span className="text-ink font-medium">{cfg.title}</span>
+    <main className="max-w-container mx-auto px-6 py-8 pb-20">
+      <div className="flex items-end justify-between flex-wrap gap-5 mb-7">
+        <div>
+          <h1 className="font-serif italic text-4xl text-ink leading-tight">
+            {cfg.title}
+          </h1>
+          <p className="text-[13px] text-ink/60 mt-1.5">
+            {products.length} бүтээгдэхүүн
+          </p>
         </div>
-      </nav>
+        <SortDropdown value={sortBy} />
+      </div>
 
-      <FilterChips
-        config={cfg}
-        activeFilter={activeFilter}
-        counts={counts}
-      />
-
-      <main className="max-w-container mx-auto px-6 py-8 pb-20">
-        <div className="flex items-end justify-between flex-wrap gap-5 mb-7">
-          <div>
-            <h1 className="font-serif italic text-4xl text-ink leading-tight">
-              {cfg.title}
-            </h1>
-            <p className="text-[13px] text-ink/60 mt-1.5">
-              {products.length} бүтээгдэхүүн
-            </p>
-          </div>
-          <SortDropdown value={sortBy} />
-        </div>
-
-        <ProductGrid products={products} />
-      </main>
-    </>
+      <ProductGrid products={products} />
+    </main>
   );
 }

@@ -1,18 +1,36 @@
 import Link from 'next/link';
 import { UserMenu } from './UserMenu';
 import { CartButton } from '@/components/cart/CartButton';
+import { WishlistButton } from './WishlistButton';
+import { MegaMenu } from './MegaMenu';
+import { MEGA_TABS, type MegaTab } from './megaMenuConfig';
+import { getMenuColors, tabLabelToCategoryKey } from '@/lib/theme/getTheme';
+import { resolveColor } from '@/lib/theme/palette';
 
-const NAV_ITEMS = [
-  { label: 'Өөрийн гараар', href: '/diy', badge: 'шинэ' as const },
-  { label: 'Цэцэг', href: '/catalog/flowers' },
-  { label: 'Ургамал', href: '/catalog/plants' },
-  { label: 'Бэлэг', href: '/catalog/gifts' },
-  { label: 'Карт', href: '/catalog/cards', badge: 'шинэ' as const },
-  { label: 'Захиалгат', href: '/catalog/subs' },
-  { label: 'Бүгд', href: '/catalog/all' },
-];
+/**
+ * Merge static MEGA_TABS config with DB-driven theme colors.
+ * Admin can change colors in /admin/theme.
+ */
+function applyTheme(
+  tabs: MegaTab[],
+  colors: Awaited<ReturnType<typeof getMenuColors>>
+): MegaTab[] {
+  return tabs.map((tab) => {
+    const cat = tabLabelToCategoryKey(tab.label);
+    if (!cat) return tab;
+    const color = resolveColor(colors[cat]);
+    return {
+      ...tab,
+      bgClass: color.bgClass,
+      tabHoverClass: color.hoverClass,
+    };
+  });
+}
 
-export function MainHeader() {
+export async function MainHeader() {
+  const menuColors = await getMenuColors();
+  const tabs = applyTheme(MEGA_TABS, menuColors);
+
   return (
     <header className="bg-white border-b border-border">
       {/* Row 1: Promo bar */}
@@ -37,9 +55,6 @@ export function MainHeader() {
             className="font-serif italic text-[28px] leading-none text-ink no-underline"
           >
             Gegeen<span className="font-light"> ✻</span>
-            <span className="block text-[10px] tracking-[0.2em] uppercase font-sans not-italic text-ink/60 mt-1">
-              AI Atelier
-            </span>
           </Link>
 
           <div className="hidden md:flex">
@@ -64,11 +79,9 @@ export function MainHeader() {
             </div>
           </div>
 
-          <nav className="flex items-center gap-5 text-sm">
+          <nav className="flex items-center gap-4">
             <UserMenu />
-            <Link href="/account/wishlist" aria-label="Хадгалсан">
-              ♡
-            </Link>
+            <WishlistButton />
             <CartButton />
           </nav>
         </div>
@@ -76,18 +89,21 @@ export function MainHeader() {
 
       {/* Row 3: Main nav */}
       <nav className="sticky top-0 z-30 bg-white/95 backdrop-blur border-t border-border">
-        <ul className="max-w-container mx-auto px-6 flex items-center justify-center gap-10 py-3 text-[15px]">
-          {NAV_ITEMS.map((item) => (
-            <li key={item.href}>
+        <ul className="max-w-container mx-auto px-6 flex items-center justify-center gap-10 py-0 text-[15px]">
+          {tabs.map((tab) => (
+            <li key={tab.label} className="relative group">
               <Link
-                href={item.href}
-                className="flex items-center gap-2 py-2 hover:text-pinkHot transition-colors"
+                href={tab.href}
+                className={`flex items-center gap-2 py-4 px-3 rounded-t-lg transition-colors relative z-10 hover:text-ink ${tab.tabHoverClass ?? ''} ${tab.hasMega ? 'group-hover:font-semibold' : 'hover:text-pinkHot'}`}
               >
-                {item.label}
-                {item.badge && (
-                  <span className="badge-yellow">{item.badge}</span>
+                {tab.label}
+                {tab.badge && (
+                  <span className="badge-yellow">
+                    {tab.badge === 'new' ? 'шинэ' : 'top'}
+                  </span>
                 )}
               </Link>
+              {tab.hasMega && <MegaMenu tab={tab} />}
             </li>
           ))}
         </ul>

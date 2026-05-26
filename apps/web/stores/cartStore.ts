@@ -12,6 +12,8 @@ export interface CartItem {
 
 interface CartState {
   items: CartItem[];
+  /** Hydrated product details keyed by productId — populated by refresh() */
+  products: Record<string, Product>;
   isOpen: boolean;
   // Hydration flag — true once we've synced with the server (or confirmed no user)
   hydrated: boolean;
@@ -26,8 +28,10 @@ interface CartActions {
   remove: (productId: string) => Promise<void>;
   setQty: (productId: string, qty: number) => Promise<void>;
   clear: () => Promise<void>;
-  /** Re-fetch from server. No-op for guests. */
+  /** Re-fetch items + products from server. */
   refresh: () => Promise<void>;
+  /** Re-fetch only product details (uses current items). */
+  refreshProducts: () => Promise<void>;
   /** Merge localStorage cart into server (on login). */
   mergeToServer: () => Promise<void>;
   /** Hydrate from server on app start. */
@@ -45,6 +49,7 @@ export const useCartStore = create<CartState & CartActions>()(
   persist(
     (set, get) => ({
       items: [],
+      products: {},
       isOpen: false,
       hydrated: false,
 
@@ -73,7 +78,12 @@ export const useCartStore = create<CartState & CartActions>()(
           if (error) {
             console.error('Cart add error', error);
             await get().refresh();
+            return;
           }
+        }
+        // Make sure product details for the new item are loaded
+        if (!get().products[productId]) {
+          await get().refreshProducts();
         }
       },
 
@@ -118,6 +128,8 @@ export const useCartStore = create<CartState & CartActions>()(
       refresh: async () => {
         const uid = await currentUserId();
         if (!uid) {
+          // Anonymous: keep localStorage items, just hydrate product details
+          await get().refreshProducts();
           set({ hydrated: true });
           return;
         }
@@ -129,6 +141,28 @@ export const useCartStore = create<CartState & CartActions>()(
           items: (data ?? []).map((r) => ({ productId: r.product_id, qty: r.qty })),
           hydrated: true,
         });
+        // Fetch product details after items update
+        await get().refreshProducts();
+      },
+
+      refreshProducts: async () => {
+        const items = get().items;
+        if (items.length === 0) {
+          set({ products: {} });
+          return;
+        }
+        const ids = items.map((i) => i.productId);
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .in('id', ids);
+        if (error) {
+          console.error('Cart products fetch error:', error.message);
+          return;
+        }
+        const map: Record<string, Product> = {};
+        (data ?? []).forEach((p) => { map[p.id] = p; });
+        set({ products: map });
       },
 
       mergeToServer: async () => {
