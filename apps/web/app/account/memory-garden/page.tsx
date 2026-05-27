@@ -1,17 +1,14 @@
-import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { MemoryDateCard } from '@/components/account/MemoryDateCard';
+import { MemoryDateCard, type MemoryOrder } from '@/components/account/MemoryDateCard';
 import { MemoryDateAdder } from '@/components/account/MemoryDateAdder';
-import { formatMonthDay } from '@/lib/memory/occasions';
-import type { MemoryDate, Product } from '@/types/database';
 
 export const metadata = { title: 'Memory Garden' };
 
 export default async function MemoryGardenPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/login?next=/account/memory-garden');
+  // Auth-guarded by /account/layout.tsx; this is a defensive guard for TS
+  if (!user) return null;
 
   // 1) All memory dates for this user
   const { data: dates } = await supabase
@@ -29,18 +26,24 @@ export default async function MemoryGardenPage() {
     (upcoming ?? []).map((u) => [u.id as number, u.days_until as number])
   );
 
-  // 3) Hydrate AI-suggested products
-  const productIds = Array.from(
-    new Set((dates ?? []).map((d) => d.ai_suggested_product_id).filter(Boolean))
-  ) as string[];
-
-  const { data: products } = productIds.length
+  // 3) Order history per memory date — orders.memory_date_id (Phase 2)
+  const dateIds = (dates ?? []).map((d) => d.id);
+  const { data: linkedOrders } = dateIds.length
     ? await supabase
-        .from('products')
-        .select('id, name, price, img_seed, img_prompt, img_url')
-        .in('id', productIds)
-    : { data: [] };
-  const productMap = new Map((products ?? []).map((p) => [p.id, p]));
+        .from('orders')
+        .select('id, order_code, total, status, created_at, memory_date_id')
+        .eq('user_id', user.id)
+        .in('memory_date_id', dateIds)
+        .order('created_at', { ascending: false })
+    : { data: [] as MemoryOrder[] };
+
+  const ordersByDate = new Map<number, MemoryOrder[]>();
+  for (const o of (linkedOrders ?? []) as MemoryOrder[]) {
+    if (o.memory_date_id == null) continue;
+    const arr = ordersByDate.get(o.memory_date_id) ?? [];
+    arr.push(o);
+    ordersByDate.set(o.memory_date_id, arr);
+  }
 
   // Sort: upcoming (within 90 days, asc by days_until) first, then rest by month/day
   const upcomingIds = new Set((upcoming ?? []).map((u) => u.id));
@@ -56,22 +59,16 @@ export default async function MemoryGardenPage() {
   });
 
   return (
-    <main className="max-w-3xl mx-auto px-6 py-12">
-      <nav className="text-[13px] text-ink/60 mb-4 flex items-center gap-2">
-        <Link href="/account/profile" className="hover:text-ink">
-          Хувийн мэдээлэл
-        </Link>
-        <span className="text-ink/30">›</span>
-        <span className="text-ink font-medium">Memory Garden</span>
-      </nav>
-
-      <header className="mb-8">
-        <h1 className="font-serif italic text-4xl">Memory Garden ✻</h1>
-        <p className="text-sm text-ink/60 mt-2 max-w-prose">
-          Хайртай хүмүүсийнхээ чухал огноог хадгална уу. AI цэцэг ойртохоос
-          7 хоног + 1 хоног өмнө сануулга илгээж, тэр хүний дургуйц цэцгийг санал болгоно.
-        </p>
-      </header>
+    <div className="max-w-3xl">
+      <div className="text-[11px] uppercase tracking-[0.2em] text-pinkHot mb-3">
+        Чухал огноо
+      </div>
+      <h1 className="font-serif text-4xl mb-2">Memory Garden ✻</h1>
+      <p className="text-sm text-ink/60 mb-8 max-w-prose">
+        Хайртай хүмүүсийнхээ чухал огноог хадгална уу. Ойртохоос 7 хоног + 1
+        хоног өмнө сануулга илгээж, тухайн event-д хүргүүлсэн цэцгийн түүхийг
+        хадгална.
+      </p>
 
       <section className="mb-6">
         <MemoryDateAdder />
@@ -97,11 +94,7 @@ export default async function MemoryGardenPage() {
                       key={d.id}
                       item={d}
                       daysUntil={daysUntilMap.get(d.id) ?? null}
-                      suggestion={
-                        d.ai_suggested_product_id
-                          ? productMap.get(d.ai_suggested_product_id) ?? null
-                          : null
-                      }
+                      orders={ordersByDate.get(d.id) ?? []}
                     />
                   ))}
               </div>
@@ -122,11 +115,7 @@ export default async function MemoryGardenPage() {
                       key={d.id}
                       item={d}
                       daysUntil={null}
-                      suggestion={
-                        d.ai_suggested_product_id
-                          ? productMap.get(d.ai_suggested_product_id) ?? null
-                          : null
-                      }
+                      orders={ordersByDate.get(d.id) ?? []}
                     />
                   ))}
               </div>
@@ -138,6 +127,6 @@ export default async function MemoryGardenPage() {
       <p className="text-xs text-ink/40 mt-12 italic text-center">
         Care wildly. We&apos;re here for the little things that matter.
       </p>
-    </main>
+    </div>
   );
 }

@@ -1,22 +1,39 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState, useTransition } from 'react';
-import { deleteMemoryDate, toggleReminders } from '@/app/(shop)/account/memory-garden/actions';
+import { deleteMemoryDate, toggleReminders } from '@/app/account/memory-garden/actions';
 import { OCCASIONS, formatMonthDay, type OccasionKey } from '@/lib/memory/occasions';
-import { productImageUrl } from '@/lib/ai/pollinations';
 import { MemoryDateForm } from './MemoryDateForm';
-import type { MemoryDate, Product } from '@/types/database';
+import type { MemoryDate } from '@/types/database';
+
+export type MemoryOrder = {
+  id: number;
+  order_code: string | null;
+  total: number;
+  status: string | null;
+  created_at: string | null;
+  memory_date_id: number | null;
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  pending_payment: 'Төлбөр хүлээж байна',
+  paid: 'Төлбөр төлөгдсөн',
+  preparing: 'Бэлдэж байна',
+  shipped: 'Хүргэлтэнд',
+  delivered: 'Хүргэгдсэн',
+  cancelled: 'Цуцлагдсан',
+  refunded: 'Буцаасан',
+};
 
 export function MemoryDateCard({
   item,
   daysUntil,
-  suggestion,
+  orders,
 }: {
   item: MemoryDate;
   daysUntil: number | null;
-  suggestion: Pick<Product, 'id' | 'name' | 'price' | 'img_seed' | 'img_prompt' | 'img_url'> | null;
+  orders: MemoryOrder[];
 }) {
   const [editing, setEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -88,37 +105,50 @@ export function MemoryDateCard({
           </p>
         )}
 
-        {suggestion && remindersOn && (
-          <div className="mt-3 flex items-center gap-3 bg-offwhite rounded-lg p-2.5">
-            <div className="relative w-12 h-12 rounded bg-lilac/40 overflow-hidden flex-shrink-0">
-              <Image
-                src={productImageUrl(suggestion, 100, 100)}
-                alt={suggestion.name}
-                fill
-                sizes="48px"
-                className="object-cover"
-                unoptimized
-              />
+        {/* Хүргэлтийн түүх — тухайн event-д хүргүүлсэн захиалгууд */}
+        {orders.length > 0 ? (
+          <div className="mt-3">
+            <div className="text-[10px] uppercase tracking-wider text-ink/40 mb-1.5">
+              Хүргэлтийн түүх ({orders.length})
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] uppercase tracking-wider text-ink/40">
-                AI санал
-              </div>
-              <Link
-                href={`/product/${suggestion.id}`}
-                className="text-sm font-medium hover:text-pinkHot truncate block"
-              >
-                {suggestion.name}
-              </Link>
-              <div className="text-xs text-ink/60">
-                {suggestion.price.toLocaleString()}₮
-              </div>
-            </div>
+            <ul className="space-y-1.5">
+              {orders.map((o) => (
+                <li
+                  key={o.id}
+                  className="flex items-center justify-between gap-3 bg-offwhite rounded-lg px-3 py-2 text-xs"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-ink truncate">
+                      {o.order_code}
+                    </div>
+                    <div className="text-ink/50">
+                      {o.created_at
+                        ? new Date(o.created_at).toLocaleDateString('mn-MN', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })
+                        : '—'}{' '}
+                      · {STATUS_LABEL[o.status ?? ''] ?? o.status ?? '—'}
+                    </div>
+                  </div>
+                  <div className="font-semibold text-ink whitespace-nowrap">
+                    {o.total.toLocaleString()}₮
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <div className="mt-3 flex items-center justify-between gap-3 bg-offwhite rounded-lg px-3 py-2.5 text-xs">
+            <span className="text-ink/50">
+              Энэ event-д цэцэг хүргүүлж байгаагүй
+            </span>
             <Link
-              href={`/product/${suggestion.id}`}
-              className="text-xs text-pinkHot hover:underline whitespace-nowrap"
+              href={`/catalog/all?for_memory=${item.id}`}
+              className="text-pinkHot hover:underline whitespace-nowrap font-medium"
             >
-              Үзэх →
+              Цэцэг сонгох →
             </Link>
           </div>
         )}

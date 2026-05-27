@@ -92,13 +92,25 @@ export function suggestProductForOccasion(
   return best?.id ?? null;
 }
 
-/** Format month+day as "May 17" */
-export function formatMonthDay(
-  month: number,
-  day: number,
-  locale: string = 'mn-MN'
-): string {
-  // Use a fixed year so formatting is consistent
-  const d = new Date(2024, month - 1, day);
-  return d.toLocaleDateString(locale, { day: 'numeric', month: 'long' });
+// Deterministic Mongolian month names — avoids Intl/ICU mismatch between
+// server (full ICU) and browser (partial ICU) which caused a hydration error.
+const MN_MONTHS = [
+  'нэгдүгээр',
+  'хоёрдугаар',
+  'гуравдугаар',
+  'дөрөвдүгээр',
+  'тавдугаар',
+  'зургаадугаар',
+  'долдугаар',
+  'наймдугаар',
+  'есдүгээр',
+  'аравдугаар',
+  'арван нэгдүгээр',
+  'арван хоёрдугаар',
+];
+
+/** Format month+day as "зургаадугаар сарын 15" (Mongolian) */
+export function formatMonthDay(month: number, day: number): string {
+  const m = MN_MONTHS[month - 1] ?? `${month}-р`;
+  return `${m} сарын ${day}`;
 }

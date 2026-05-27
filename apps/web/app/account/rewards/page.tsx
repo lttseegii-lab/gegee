@@ -1,5 +1,3 @@
-import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { TIERS, getTier, getNextTier } from '@/lib/rewards/tiers';
 
@@ -8,7 +6,7 @@ export const metadata = { title: 'Gegeen Rewards' };
 export default async function RewardsPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/login?next=/account/rewards');
+  if (!user) return null;
 
   const [{ data: rewards }, { data: history }] = await Promise.all([
     supabase
@@ -40,21 +38,14 @@ export default async function RewardsPage() {
     : 100;
 
   return (
-    <main className="max-w-3xl mx-auto px-6 py-12">
-      <nav className="text-[13px] text-ink/60 mb-4 flex items-center gap-2">
-        <Link href="/account/profile" className="hover:text-ink">
-          Хувийн мэдээлэл
-        </Link>
-        <span className="text-ink/30">›</span>
-        <span className="text-ink font-medium">Gegeen Rewards</span>
-      </nav>
-
-      <header className="mb-8">
-        <h1 className="font-serif italic text-4xl">Gegeen Rewards</h1>
-        <p className="text-sm text-ink/60 mt-2">
-          1 оноо / 1000₮ зарцуулсанд. Tier-ээс хамаарч multiplier ажиллана.
-        </p>
-      </header>
+    <div className="max-w-3xl">
+      <div className="text-[11px] uppercase tracking-[0.2em] text-pinkHot mb-3">
+        Урамшуулал
+      </div>
+      <h1 className="font-serif text-4xl mb-2">Gegeen Rewards</h1>
+      <p className="text-sm text-ink/60 mb-8">
+        1 оноо / 1000₮ зарцуулсанд. Tier-ээс хамаарч multiplier ажиллана.
+      </p>
 
       {/* Current tier hero */}
       <section className="bg-blush rounded-card p-8 mb-8 text-center">
@@ -203,6 +194,6 @@ export default async function RewardsPage() {
           </ul>
         )}
       </section>
-    </main>
+    </div>
   );
 }

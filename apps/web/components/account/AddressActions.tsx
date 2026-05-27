@@ -1,7 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
-import { deleteAddress, setDefaultAddress } from '@/app/(shop)/account/addresses/actions';
+import { deleteAddress, setDefaultAddress } from '@/app/account/addresses/actions';
 
 export function AddressActions({
   addressId,

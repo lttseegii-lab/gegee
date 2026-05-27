@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { createAddress } from '@/app/(shop)/account/addresses/actions';
+import { createAddress } from '@/app/account/addresses/actions';
+import { UB_DISTRICTS, listKhoroos } from '@/lib/mn/districts';
 
 export function AddressForm({ onCreated }: { onCreated?: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [district, setDistrict] = useState<string>('');
+  const khoroos = listKhoroos(district);
 
   function handle(formData: FormData) {
     setError(null);
@@ -16,26 +19,78 @@ export function AddressForm({ onCreated }: { onCreated?: () => void }) {
       } else if (res?.ok) {
         const form = document.getElementById('address-form') as HTMLFormElement;
         form?.reset();
+        setDistrict('');
         onCreated?.();
       }
     });
   }
 
   return (
-    <form id="address-form" action={handle} className="border border-border rounded-card p-6 space-y-4 mb-6">
+    <form
+      id="address-form"
+      action={handle}
+      className="border border-border rounded-card p-6 space-y-4 mb-6"
+    >
       <h3 className="font-medium text-lg">Шинэ хаяг нэмэх</h3>
 
       <div className="grid sm:grid-cols-2 gap-4">
-        <Field name="label" label="Нэр" placeholder="Гэр / Ажил" defaultValue="Гэр" />
-        <Field name="recipient" label="Хүлээн авагч" placeholder="Бат Болд" required />
+        <Field
+          name="label"
+          label="Нэр"
+          placeholder="Гэр / Ажил"
+          defaultValue="Гэр"
+        />
+        <Field
+          name="recipient"
+          label="Хүлээн авагч"
+          placeholder="Бат Болд"
+          required
+        />
       </div>
 
       <Field name="phone" label="Утас" placeholder="+976 9999 9999" required />
 
       <div className="grid sm:grid-cols-3 gap-4">
         <Field name="city" label="Хот" defaultValue="Улаанбаатар" />
-        <Field name="district" label="Дүүрэг" placeholder="Сүхбаатар" />
-        <Field name="khoroo" label="Хороо" placeholder="3-р хороо" />
+
+        <div>
+          <label className="block text-xs uppercase tracking-wider text-ink/60 mb-1.5">
+            Дүүрэг
+          </label>
+          <select
+            name="district"
+            value={district}
+            onChange={(e) => setDistrict(e.target.value)}
+            className="w-full bg-white border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-ink"
+          >
+            <option value="">— Сонгох —</option>
+            {UB_DISTRICTS.map((d) => (
+              <option key={d.key} value={d.key}>
+                {d.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs uppercase tracking-wider text-ink/60 mb-1.5">
+            Хороо
+          </label>
+          <select
+            name="khoroo"
+            disabled={!district}
+            className="w-full bg-white border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-ink disabled:bg-ink/5 disabled:text-ink/40 disabled:cursor-not-allowed"
+          >
+            <option value="">
+              {district ? '— Сонгох —' : 'Эхлээд дүүргээ'}
+            </option>
+            {khoroos.map((k) => (
+              <option key={k} value={k}>
+                {k}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <Field name="building" label="Барилга, гудамж" placeholder="Олимп 25" />

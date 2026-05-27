@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { OCCASION_KEYS, suggestProductForOccasion, type OccasionKey } from '@/lib/memory/occasions';
+import { OCCASION_KEYS, type OccasionKey } from '@/lib/memory/occasions';
 
 function asStr(v: FormDataEntryValue | null): string {
   return typeof v === 'string' ? v.trim() : '';
@@ -16,15 +16,6 @@ function asInt(v: FormDataEntryValue | null): number | null {
 }
 function asBool(v: FormDataEntryValue | null): boolean {
   return v === 'on' || v === 'true' || v === '1';
-}
-
-async function pickSuggestion(supabase: ReturnType<typeof createClient>, occasion: OccasionKey) {
-  const { data } = await supabase
-    .from('products')
-    .select('id, tags, price, reviews')
-    .eq('active', true)
-    .limit(50);
-  return suggestProductForOccasion(occasion, data ?? []);
 }
 
 export async function createMemoryDate(formData: FormData) {
@@ -49,8 +40,8 @@ export async function createMemoryDate(formData: FormData) {
     return { error: 'Сар/өдөр буруу' };
   }
 
-  const ai_suggested_product_id = await pickSuggestion(supabase, occasion);
-
+  // Note: ai_suggested_product_id is no longer populated automatically.
+  // Order history (orders.memory_date_id) provides the meaningful link instead.
   const { error } = await supabase.from('memory_dates').insert({
     user_id: user.id,
     name,
@@ -60,7 +51,6 @@ export async function createMemoryDate(formData: FormData) {
     occasion,
     notes,
     reminders_enabled,
-    ai_suggested_product_id,
   });
   if (error) return { error: error.message };
 
@@ -79,9 +69,6 @@ export async function updateMemoryDate(id: number, formData: FormData) {
 
   if (!month || !day) return { error: 'Сар ба өдөр заавал' };
 
-  // Re-pick suggestion if occasion changed
-  const ai_suggested_product_id = await pickSuggestion(supabase, occasion);
-
   const updates = {
     name: asStr(formData.get('name')),
     month,
@@ -90,7 +77,6 @@ export async function updateMemoryDate(id: number, formData: FormData) {
     occasion,
     notes: asStr(formData.get('notes')) || null,
     reminders_enabled: formData.get('reminders_enabled') == null ? true : asBool(formData.get('reminders_enabled')),
-    ai_suggested_product_id,
   };
 
   const { error } = await supabase

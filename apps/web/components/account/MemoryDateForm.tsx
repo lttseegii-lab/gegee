@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { createMemoryDate, updateMemoryDate } from '@/app/(shop)/account/memory-garden/actions';
+import { createMemoryDate, updateMemoryDate } from '@/app/account/memory-garden/actions';
 import { OCCASIONS, OCCASION_KEYS, type OccasionKey } from '@/lib/memory/occasions';
 import type { MemoryDate } from '@/types/database';
 
