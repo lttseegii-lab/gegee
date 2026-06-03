@@ -8,6 +8,7 @@ import {
   type SortKey,
   type FilterDef,
 } from '@/lib/catalog';
+import { getMenuSubcategories } from '@/lib/theme/getTheme';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { SortDropdown } from '@/components/catalog/SortDropdown';
 
@@ -48,14 +49,29 @@ export default async function CatalogPage({
   const sortBy = (searchParams.sort as SortKey) ?? 'popular';
 
   // Server-side fetch — base products filtered by category tags
+  // Merge static baseTags with admin-defined subcategory tags so admin can
+  // tag products into this category without modifying CATALOG_CONFIG.
   const supabase = createClient();
   let query = supabase
     .from('products')
     .select('*')
     .eq('active', true);
 
-  if (cfg.baseTags && cfg.baseTags.length > 0) {
-    query = query.overlaps('tags', cfg.baseTags);
+  let effectiveBaseTags = cfg.baseTags ?? null;
+  if (category !== 'all') {
+    try {
+      const subs = await getMenuSubcategories();
+      const catSubs = subs[category as Exclude<CategoryKey, 'all'>] ?? [];
+      const subTags = catSubs.map((s) => s.tag);
+      const merged = Array.from(new Set([...(cfg.baseTags ?? []), ...subTags]));
+      if (merged.length > 0) effectiveBaseTags = merged;
+    } catch {
+      /* fall back to static cfg.baseTags */
+    }
+  }
+
+  if (effectiveBaseTags && effectiveBaseTags.length > 0) {
+    query = query.overlaps('tags', effectiveBaseTags);
   }
 
   const { data: baseProducts, error } = await query;
@@ -65,11 +81,45 @@ export default async function CatalogPage({
 
   const allProducts = baseProducts ?? [];
 
-  // Apply current filter + sort
-  const activeFilterDef =
-    (cfg.filters.find(
+  // Resolve activeFilter into a FilterDef. Priority order:
+  //   1. "all" → no filter
+  //   2. Hardcoded CATALOG_CONFIG.filters (legacy chips: letterbox, premium, etc.)
+  //   3. Admin-defined subcategory whose tag OR key matches
+  //   4. Fall back: treat the raw filter string as a tag (so any tag you add
+  //      via the admin theme picker filters correctly even without a chip).
+  let activeFilterDef: FilterDef;
+  let activeFilterLabel: string | null = null;
+
+  if (activeFilter === 'all') {
+    activeFilterDef = { key: 'all', label: 'Бүгд' };
+  } else {
+    const hardcoded = cfg.filters.find(
       (f): f is FilterDef => f !== '__div__' && f.key === activeFilter
-    ) as FilterDef | undefined) ?? { key: 'all', label: 'Бүгд' };
+    );
+    if (hardcoded) {
+      activeFilterDef = hardcoded;
+      activeFilterLabel = hardcoded.label;
+    } else {
+      // Look up admin-defined subcategory for a friendly label
+      try {
+        const subs = await getMenuSubcategories();
+        const catSubs = subs[category as Exclude<CategoryKey, 'all'>] ?? [];
+        const match = catSubs.find(
+          (s) => s.tag === activeFilter || s.key === activeFilter
+        );
+        if (match) activeFilterLabel = match.label;
+      } catch {
+        /* ignore — fall through to tag-based filter */
+      }
+
+      // Tag-based filter: products with this tag in their `tags` array
+      activeFilterDef = {
+        key: activeFilter,
+        label: activeFilterLabel ?? activeFilter,
+        tags: [activeFilter],
+      };
+    }
+  }
 
   const filtered = allProducts.filter((p) => matchesFilter(p, activeFilterDef));
   const products = sortProducts(filtered, sortBy);
@@ -80,6 +130,11 @@ export default async function CatalogPage({
         <div>
           <h1 className="font-serif italic text-4xl text-ink leading-tight">
             {cfg.title}
+            {activeFilterLabel && (
+              <span className="text-ink/40 font-serif italic text-2xl ml-3">
+                · {activeFilterLabel}
+              </span>
+            )}
           </h1>
           <p className="text-[13px] text-ink/60 mt-1.5">
             {products.length} бүтээгдэхүүн
