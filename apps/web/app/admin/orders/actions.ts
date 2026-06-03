@@ -59,3 +59,100 @@ export async function updateOrderStatus(orderId: number, next: OrderStatus) {
   revalidatePath('/admin');
   return { ok: true };
 }
+
+// ============================================================
+// Trust-layer photo upload — used by admin "Зураг оруулах" UI
+// ============================================================
+
+type PhotoSlot = 'prep' | 'delivery';
+
+/**
+ * Upload a fulfillment photo to Supabase Storage and write the public URL
+ * back onto the order row (prep_photo_url | delivery_photo_url).
+ *
+ * Customer-facing order detail page reads this URL to render trust photos
+ * inside the OrderTimeline component.
+ */
+export async function uploadOrderPhoto(
+  orderId: number,
+  slot: PhotoSlot,
+  formData: FormData
+): Promise<{ ok: boolean; url?: string; error?: string }> {
+  try {
+    await assertAdmin();
+  } catch {
+    return { ok: false, error: 'Forbidden' };
+  }
+
+  const file = formData.get('file');
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: 'Зураг сонгоно уу' };
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    return { ok: false, error: 'Зургийн хэмжээ 10MB-аас бага байх ёстой' };
+  }
+  if (!file.type.startsWith('image/')) {
+    return { ok: false, error: 'Зөвхөн зураг upload хийнэ үү' };
+  }
+
+  const svc = createServiceClient();
+  const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase();
+  const ts = Date.now();
+  const key = `${orderId}/${slot}-${ts}.${ext}`;
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const { error: uploadErr } = await svc.storage
+    .from('order-photos')
+    .upload(key, bytes, {
+      contentType: file.type,
+      upsert: true,
+    });
+  if (uploadErr) {
+    return { ok: false, error: uploadErr.message };
+  }
+
+  const { data: pub } = svc.storage
+    .from('order-photos')
+    .getPublicUrl(key);
+  const publicUrl = pub.publicUrl;
+
+  const { error: updateErr } = await svc
+    .from('orders')
+    .update(
+      slot === 'prep'
+        ? { prep_photo_url: publicUrl }
+        : { delivery_photo_url: publicUrl }
+    )
+    .eq('id', orderId);
+  if (updateErr) {
+    return { ok: false, error: updateErr.message };
+  }
+
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath(`/account/orders/${orderId}`);
+  return { ok: true, url: publicUrl };
+}
+
+export async function removeOrderPhoto(
+  orderId: number,
+  slot: PhotoSlot
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await assertAdmin();
+  } catch {
+    return { ok: false, error: 'Forbidden' };
+  }
+  const svc = createServiceClient();
+  const { error } = await svc
+    .from('orders')
+    .update(
+      slot === 'prep'
+        ? { prep_photo_url: null }
+        : { delivery_photo_url: null }
+    )
+    .eq('id', orderId);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath(`/account/orders/${orderId}`);
+  return { ok: true };
+}

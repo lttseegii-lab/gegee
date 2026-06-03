@@ -10,6 +10,7 @@ import {
   readCardMessageDraft,
   clearCardMessageDraft,
 } from './CardMessageEditor';
+import { DeliverySlotPicker, type DeliveryPlan } from './DeliverySlotPicker';
 
 export function CheckoutForm({ addresses }: { addresses: AddressRow[] }) {
   const router = useRouter();
@@ -18,6 +19,7 @@ export function CheckoutForm({ addresses }: { addresses: AddressRow[] }) {
   );
   const [notes, setNotes] = useState('');
   const [cardMessage, setCardMessage] = useState('');
+  const [delivery, setDelivery] = useState<DeliveryPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const clearLocalCart = useCartStore((s) => s.clear);
@@ -32,13 +34,18 @@ export function CheckoutForm({ addresses }: { addresses: AddressRow[] }) {
       setError('Хаяг сонгоно уу');
       return;
     }
+    if (!delivery?.recipient_phone || delivery.recipient_phone.trim().length < 6) {
+      setError('Хүлээн авагчийн утсыг бөглөнө үү');
+      return;
+    }
     setError(null);
     startTransition(async () => {
-      const res = await createOrderFromCart(
-        selectedId,
-        notes || undefined,
-        cardMessage || undefined
-      );
+      const res = await createOrderFromCart({
+        addressId: selectedId,
+        notes: notes || undefined,
+        cardMessage: cardMessage || undefined,
+        delivery: delivery ?? undefined,
+      });
       if (!res.ok) {
         setError(res.error ?? 'Алдаа гарлаа');
         return;
@@ -125,6 +132,12 @@ export function CheckoutForm({ addresses }: { addresses: AddressRow[] }) {
             </li>
           ))}
         </ul>
+      </section>
+
+      {/* Delivery slot */}
+      <section>
+        <h2 className="font-medium mb-3">Хүргэлтийн цаг</h2>
+        <DeliverySlotPicker onChange={setDelivery} />
       </section>
 
       {/* Card message preview (from step 3) */}

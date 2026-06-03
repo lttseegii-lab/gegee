@@ -3,8 +3,16 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { StatusUpdater } from '@/components/admin/StatusUpdater';
+import { OrderPhotoUploader } from '@/components/admin/OrderPhotoUploader';
 import { productImageUrl } from '@/lib/ai/pollinations';
 import type { OrderStatus } from '@/types/database';
+
+const SLOT_LABEL: Record<string, string> = {
+  asap: 'Хамгийн хурдан',
+  '10-13': '10:00–13:00',
+  '14-17': '14:00–17:00',
+  '18-21': '18:00–21:00',
+};
 
 const STATUS_LABEL: Record<string, string> = {
   pending_payment: 'Төлбөр хүлээж буй',
@@ -171,6 +179,92 @@ export default async function AdminOrderDetail({
               </div>
             </div>
           </section>
+
+          {/* Delivery scheduling */}
+          {(order.delivery_date ||
+            order.delivery_slot ||
+            order.recipient_phone ||
+            order.is_surprise) && (
+            <section className="bg-white border border-border rounded-card p-6">
+              <h2 className="font-medium mb-3">Хүргэлтийн төлөвлөгөө</h2>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                {order.delivery_date && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider text-ink/40 mb-0.5">
+                      Огноо
+                    </div>
+                    <div className="font-medium">
+                      {new Date(order.delivery_date).toLocaleDateString('mn-MN', {
+                        dateStyle: 'medium',
+                      })}
+                    </div>
+                  </div>
+                )}
+                {order.delivery_slot && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider text-ink/40 mb-0.5">
+                      Цаг
+                    </div>
+                    <div className="font-medium">
+                      {SLOT_LABEL[order.delivery_slot] ?? order.delivery_slot}
+                    </div>
+                  </div>
+                )}
+                {order.recipient_phone && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider text-ink/40 mb-0.5">
+                      Хүлээн авагч утас
+                    </div>
+                    <div className="font-medium font-mono">
+                      {order.recipient_phone}
+                    </div>
+                  </div>
+                )}
+                {order.is_surprise && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider text-ink/40 mb-0.5">
+                      Горим
+                    </div>
+                    <div className="font-medium text-pinkHot">
+                      🎁 Нууц бэлэг
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* Trust photos */}
+          <section className="bg-white border border-border rounded-card p-6">
+            <h2 className="font-medium mb-3">Trust зураг</h2>
+            <p className="text-xs text-ink/50 mb-4">
+              Захиалагчид баглаа бэлэн болсон болон хүргэгдсэн зургийг харуулна
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <OrderPhotoUploader
+                orderId={order.id}
+                slot="prep"
+                label="Баглаа бэлэн"
+                initialUrl={order.prep_photo_url}
+              />
+              <OrderPhotoUploader
+                orderId={order.id}
+                slot="delivery"
+                label="Хүргэгдсэн"
+                initialUrl={order.delivery_photo_url}
+              />
+            </div>
+          </section>
+
+          {/* Card message */}
+          {order.card_message && (
+            <section className="bg-white border border-border rounded-card p-6">
+              <h2 className="font-medium mb-3">Картын мессеж</h2>
+              <div className="bg-blush rounded-lg p-4 italic text-sm text-ink/80">
+                “{order.card_message}”
+              </div>
+            </section>
+          )}
 
           {/* Address */}
           <section className="bg-white border border-border rounded-card p-6">

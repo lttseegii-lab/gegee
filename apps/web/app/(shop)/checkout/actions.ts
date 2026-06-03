@@ -12,6 +12,20 @@ export interface CreateOrderResult {
   error?: string;
 }
 
+export interface DeliveryPayload {
+  date: string;
+  slot: 'asap' | '10-13' | '14-17' | '18-21';
+  is_surprise: boolean;
+  recipient_phone: string;
+}
+
+export interface CreateOrderArgs {
+  addressId: number;
+  notes?: string;
+  cardMessage?: string;
+  delivery?: DeliveryPayload;
+}
+
 /**
  * Creates an order from the user's current cart.
  * - Validates cart contents against current product prices
@@ -22,10 +36,9 @@ export interface CreateOrderResult {
  * (apps/web/lib/qpay/createInvoice.ts) before redirecting to /checkout/payment.
  */
 export async function createOrderFromCart(
-  addressId: number,
-  notes?: string,
-  cardMessage?: string
+  args: CreateOrderArgs
 ): Promise<CreateOrderResult> {
+  const { addressId, notes, cardMessage, delivery } = args;
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: 'Нэвтэрнэ үү' };
@@ -80,11 +93,12 @@ export async function createOrderFromCart(
   const delivery_fee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   const total = subtotal + delivery_fee;
 
-  // 4.5) Reserve capacity for today (next-day delivery later in Phase 2)
-  const todayStr = new Date().toISOString().slice(0, 10);
+  // 4.5) Reserve capacity for the requested delivery date (default today)
+  const deliveryDate =
+    delivery?.date ?? new Date().toISOString().slice(0, 10);
   const { data: reserved, error: capErr } = await supabase.rpc(
     'try_reserve_capacity',
-    { target_date: todayStr }
+    { target_date: deliveryDate }
   );
   if (capErr) {
     console.warn('Capacity reserve error (non-fatal):', capErr.message);
@@ -92,7 +106,7 @@ export async function createOrderFromCart(
     return {
       ok: false,
       error:
-        'Өнөөдөр захиалгын хязгаар дүүрсэн байна. Бид удахгүй ажилладаг болно. Дараа дахин оролдоно уу.',
+        'Сонгосон өдрийн захиалгын хязгаар дүүрсэн байна. Өөр өдөр сонгоно уу.',
     };
   }
 
@@ -108,6 +122,10 @@ export async function createOrderFromCart(
       notes: notes ?? null,
       card_message: cardMessage?.trim() || null,
       status: 'pending_payment',
+      delivery_date: deliveryDate,
+      delivery_slot: delivery?.slot ?? null,
+      is_surprise: delivery?.is_surprise ?? false,
+      recipient_phone: delivery?.recipient_phone?.trim() || null,
     })
     .select('id, order_code, total')
     .single();

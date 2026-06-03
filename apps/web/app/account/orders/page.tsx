@@ -66,34 +66,36 @@ export default async function OrdersPage() {
           {orders.map((o) => {
             const status = o.status ?? 'pending_payment';
             return (
-              <li
-                key={o.id}
-                className="bg-offwhite rounded-card p-5 flex items-center justify-between gap-4"
-              >
-                <div className="min-w-0">
-                  <div className="font-medium text-sm">{o.order_code}</div>
-                  <div className="text-xs text-ink/60 mt-1">
-                    {o.created_at
-                      ? new Date(o.created_at).toLocaleDateString('mn-MN', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })
-                      : '—'}
+              <li key={o.id}>
+                <Link
+                  href={`/account/orders/${o.id}`}
+                  className="bg-offwhite hover:bg-blush/40 rounded-card p-5 flex items-center justify-between gap-4 transition-colors"
+                >
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm">{o.order_code}</div>
+                    <div className="text-xs text-ink/60 mt-1">
+                      {o.created_at
+                        ? new Date(o.created_at).toLocaleDateString('mn-MN', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })
+                        : '—'}
+                    </div>
                   </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="font-semibold">
-                    {o.total.toLocaleString()}₮
+                  <div className="text-right shrink-0">
+                    <div className="font-semibold">
+                      {o.total.toLocaleString()}₮
+                    </div>
+                    <span
+                      className={`inline-block mt-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ${
+                        STATUS_COLOR[status] ?? 'bg-ink/10 text-ink/60'
+                      }`}
+                    >
+                      {STATUS_LABEL[status] ?? status}
+                    </span>
                   </div>
-                  <span
-                    className={`inline-block mt-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded ${
-                      STATUS_COLOR[status] ?? 'bg-ink/10 text-ink/60'
-                    }`}
-                  >
-                    {STATUS_LABEL[status] ?? status}
-                  </span>
-                </div>
+                </Link>
               </li>
             );
           })}

@@ -247,14 +247,20 @@ export type Database = {
           card_message: string | null
           created_at: string | null
           delivered_at: string | null
+          delivery_date: string | null
           delivery_fee: number | null
+          delivery_photo_url: string | null
+          delivery_slot: string | null
           id: number
+          is_surprise: boolean
           memory_date_id: number | null
           notes: string | null
           order_code: string | null
           paid_at: string | null
+          prep_photo_url: string | null
           qpay_invoice_id: string | null
           qpay_payment_id: string | null
+          recipient_phone: string | null
           status: Database["public"]["Enums"]["order_status"] | null
           subtotal: number
           total: number
@@ -265,14 +271,20 @@ export type Database = {
           card_message?: string | null
           created_at?: string | null
           delivered_at?: string | null
+          delivery_date?: string | null
           delivery_fee?: number | null
+          delivery_photo_url?: string | null
+          delivery_slot?: string | null
           id?: number
+          is_surprise?: boolean
           memory_date_id?: number | null
           notes?: string | null
           order_code?: string | null
           paid_at?: string | null
+          prep_photo_url?: string | null
           qpay_invoice_id?: string | null
           qpay_payment_id?: string | null
+          recipient_phone?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
           subtotal: number
           total: number
@@ -283,14 +295,20 @@ export type Database = {
           card_message?: string | null
           created_at?: string | null
           delivered_at?: string | null
+          delivery_date?: string | null
           delivery_fee?: number | null
+          delivery_photo_url?: string | null
+          delivery_slot?: string | null
           id?: number
+          is_surprise?: boolean
           memory_date_id?: number | null
           notes?: string | null
           order_code?: string | null
           paid_at?: string | null
+          prep_photo_url?: string | null
           qpay_invoice_id?: string | null
           qpay_payment_id?: string | null
+          recipient_phone?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
           subtotal?: number
           total?: number
@@ -518,6 +536,19 @@ export type Database = {
       merge_guest_cart: { Args: { items: Json }; Returns: undefined }
       release_capacity: { Args: { target_date: string }; Returns: undefined }
       set_default_address: { Args: { addr_id: number }; Returns: undefined }
+      todays_deliveries: {
+        Args: never
+        Returns: {
+          customer_name: string
+          delivery_slot: string
+          id: number
+          is_surprise: boolean
+          order_code: string
+          recipient_phone: string
+          status: Database["public"]["Enums"]["order_status"]
+          total: number
+        }[]
+      }
       try_reserve_capacity: { Args: { target_date: string }; Returns: boolean }
       upcoming_memory_dates: {
         Args: { lookahead_days?: number }
