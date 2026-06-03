@@ -9,6 +9,7 @@ import {
   type FilterDef,
 } from '@/lib/catalog';
 import { getMenuSubcategories } from '@/lib/theme/getTheme';
+import { resolveMood } from '@/lib/moods';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { SortDropdown } from '@/components/catalog/SortDropdown';
 
@@ -39,7 +40,7 @@ export default async function CatalogPage({
   searchParams,
 }: {
   params: { category: string };
-  searchParams: { filter?: string; sort?: string };
+  searchParams: { filter?: string; sort?: string; mood?: string };
 }) {
   const category = params.category as CategoryKey;
   if (!VALID_CATEGORIES.includes(category)) notFound();
@@ -47,6 +48,7 @@ export default async function CatalogPage({
   const cfg = CATALOG_CONFIG[category];
   const activeFilter = searchParams.filter ?? 'all';
   const sortBy = (searchParams.sort as SortKey) ?? 'popular';
+  const mood = resolveMood(searchParams.mood);
 
   // Server-side fetch — base products filtered by category tags
   // Merge static baseTags with admin-defined subcategory tags so admin can
@@ -121,7 +123,19 @@ export default async function CatalogPage({
     }
   }
 
-  const filtered = allProducts.filter((p) => matchesFilter(p, activeFilterDef));
+  let filtered = allProducts.filter((p) => matchesFilter(p, activeFilterDef));
+
+  // Mood filter (orthogonal to the regular filter chip)
+  if (mood) {
+    filtered = filtered.filter((p) => {
+      const pTags = p.tags ?? [];
+      const pOcc = p.occasion ?? [];
+      return mood.tags.some(
+        (t) => pTags.includes(t) || pOcc.includes(t)
+      );
+    });
+  }
+
   const products = sortProducts(filtered, sortBy);
 
   return (
@@ -135,9 +149,20 @@ export default async function CatalogPage({
                 · {activeFilterLabel}
               </span>
             )}
+            {mood && (
+              <span className="text-ink/40 font-serif italic text-2xl ml-3">
+                · {mood.emoji} {mood.label}
+              </span>
+            )}
           </h1>
           <p className="text-[13px] text-ink/60 mt-1.5">
             {products.length} бүтээгдэхүүн
+            {mood && (
+              <>
+                {' · '}
+                <span className="italic text-ink/40">{mood.description}</span>
+              </>
+            )}
           </p>
         </div>
         <SortDropdown value={sortBy} />

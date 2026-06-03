@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { ProductGrid } from '@/components/product/ProductGrid';
+import { MoodPicker } from '@/components/home/MoodPicker';
 
 const COLLECTION_CIRCLES: { label: string; href: string; emoji: string }[] = [
   { label: 'Бүгд', href: '/catalog/all', emoji: '✻' },
@@ -39,7 +40,10 @@ export default async function HomePage() {
               сонгож өгнө. Letterbox-аас атриум хүртэл.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link href="/catalog/all" className="btn-primary">
+              <Link href="/recommend" className="btn-primary">
+                ✨ AI санал авах
+              </Link>
+              <Link href="/catalog/all" className="btn-ghost">
                 Цэцэг үзэх
               </Link>
               <Link href="/diy" className="btn-ghost">
@@ -62,6 +66,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Mood picker — "Care wildly" — Ямар мэдрэмж илэрхийлэх вэ */}
+      <MoodPicker />
 
       {/* Collection circles */}
       <section className="border-b border-border">
@@ -99,6 +106,27 @@ export default async function HomePage() {
         </div>
 
         <ProductGrid products={products ?? []} />
+      </section>
+
+      {/* Memory Garden CTA */}
+      <section className="bg-purpleSoft/40">
+        <div className="max-w-container mx-auto px-6 py-16 grid lg:grid-cols-[1fr_auto] gap-8 items-center">
+          <div className="max-w-xl">
+            <p className="text-[13px] uppercase tracking-[0.2em] text-ink/50 mb-2">
+              ✻ Memory Garden
+            </p>
+            <h2 className="font-serif italic text-3xl mb-3">
+              Хайртай хүмүүсийнхээ <em>чухал огноог</em> мартахгүй
+            </h2>
+            <p className="text-ink/70 max-w-md">
+              Ээжийн өдөр, ой тэмдэглэл, төрсөн өдөр — бид цаг тутамд сануулж,
+              тэр хүн рүү тохирох баглааг санал болгоно.
+            </p>
+          </div>
+          <Link href="/account/memory-garden" className="btn-primary whitespace-nowrap">
+            Огноо нэмэх →
+          </Link>
+        </div>
       </section>
 
       {/* Trust */}
