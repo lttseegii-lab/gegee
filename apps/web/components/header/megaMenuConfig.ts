@@ -33,6 +33,12 @@ export interface MegaTab {
   col1?: MegaLinkItem[];
   col2?: MegaLinkItem[];
   images?: MegaImageCard[];
+  /**
+   * How to anchor the dropdown panel relative to its tab.
+   * Use `right` for the rightmost tabs to avoid viewport overflow.
+   * Defaults to `center`.
+   */
+  panelAlign?: 'left' | 'center' | 'right';
 }
 
 export const MEGA_TABS: MegaTab[] = [
@@ -153,6 +159,7 @@ export const MEGA_TABS: MegaTab[] = [
     href: '/catalog/cards',
     badge: 'new',
     hasMega: true,
+    panelAlign: 'right',
     bgClass: 'bg-purpleSoft',
     tabHoverClass: 'group-hover:bg-purpleSoft',
     col1Heading: 'Бүгд',
@@ -185,6 +192,7 @@ export const MEGA_TABS: MegaTab[] = [
     label: 'Захиалгат',
     href: '/catalog/subs',
     hasMega: true,
+    panelAlign: 'right',
     bgClass: 'bg-peach',
     tabHoverClass: 'group-hover:bg-peach',
     col1Heading: 'Бүгд',

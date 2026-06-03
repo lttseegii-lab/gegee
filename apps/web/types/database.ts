@@ -244,10 +244,12 @@ export type Database = {
       orders: {
         Row: {
           address_id: number | null
+          card_message: string | null
           created_at: string | null
           delivered_at: string | null
           delivery_fee: number | null
           id: number
+          memory_date_id: number | null
           notes: string | null
           order_code: string | null
           paid_at: string | null
@@ -260,10 +262,12 @@ export type Database = {
         }
         Insert: {
           address_id?: number | null
+          card_message?: string | null
           created_at?: string | null
           delivered_at?: string | null
           delivery_fee?: number | null
           id?: number
+          memory_date_id?: number | null
           notes?: string | null
           order_code?: string | null
           paid_at?: string | null
@@ -276,10 +280,12 @@ export type Database = {
         }
         Update: {
           address_id?: number | null
+          card_message?: string | null
           created_at?: string | null
           delivered_at?: string | null
           delivery_fee?: number | null
           id?: number
+          memory_date_id?: number | null
           notes?: string | null
           order_code?: string | null
           paid_at?: string | null
@@ -298,6 +304,13 @@ export type Database = {
             referencedRelation: "addresses"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "orders_memory_date_id_fkey"
+            columns: ["memory_date_id"]
+            isOneToOne: false
+            referencedRelation: "memory_dates"
+            referencedColumns: ["id"]
+          },
         ]
       }
       products: {
@@ -309,6 +322,8 @@ export type Database = {
           img_prompt: string | null
           img_seed: number | null
           img_url: string | null
+          is_card_upsell: boolean
+          is_gift_upsell: boolean
           name: string
           occasion: string[] | null
           pet_safe: boolean | null
@@ -325,6 +340,8 @@ export type Database = {
           img_prompt?: string | null
           img_seed?: number | null
           img_url?: string | null
+          is_card_upsell?: boolean
+          is_gift_upsell?: boolean
           name: string
           occasion?: string[] | null
           pet_safe?: boolean | null
@@ -341,6 +358,8 @@ export type Database = {
           img_prompt?: string | null
           img_seed?: number | null
           img_url?: string | null
+          is_card_upsell?: boolean
+          is_gift_upsell?: boolean
           name?: string
           occasion?: string[] | null
           pet_safe?: boolean | null

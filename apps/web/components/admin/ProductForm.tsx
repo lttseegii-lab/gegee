@@ -2,10 +2,14 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useMemo } from 'react';
 import { createProduct, updateProduct, deleteProduct } from '@/app/admin/products/actions';
 import { aiImageUrl } from '@/lib/ai/pollinations';
 import type { Product } from '@/types/database';
+import type {
+  MenuSubcategoriesMap,
+  CategoryKey,
+} from '@/lib/theme/palette';
 
 const BADGE_OPTIONS = [
   { value: '', label: '— Байхгүй —' },
@@ -15,17 +19,53 @@ const BADGE_OPTIONS = [
   { value: 'double-points', label: 'Double Points' },
 ];
 
+const CATEGORY_LABELS: Record<CategoryKey, { icon: string; label: string }> = {
+  flowers: { icon: '🌸', label: 'Цэцэг' },
+  plants: { icon: '🪴', label: 'Ургамал' },
+  gifts: { icon: '🎁', label: 'Бэлэг' },
+  cards: { icon: '💌', label: 'Карт' },
+  subs: { icon: '📦', label: 'Захиалгат' },
+};
+
 export function ProductForm({
   initial,
   mode,
+  subcategories,
 }: {
   initial?: Partial<Product>;
   mode: 'create' | 'edit';
+  subcategories: MenuSubcategoriesMap;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [imgPrompt, setImgPrompt] = useState(initial?.img_prompt ?? '');
   const [imgSeed, setImgSeed] = useState<number>(initial?.img_seed ?? 1000);
+
+  // Manage tags as state so we can sync subcategory checkboxes ↔ tags input
+  const initialTagsArr = initial?.tags ?? [];
+  const [tagsInput, setTagsInput] = useState<string>(initialTagsArr.join(', '));
+
+  const currentTags = useMemo(() => {
+    return tagsInput
+      .split(/[,;\n]/)
+      .map((t) => t.trim())
+      .filter(Boolean);
+  }, [tagsInput]);
+
+  function toggleTag(tag: string) {
+    const set = new Set(currentTags);
+    if (set.has(tag)) set.delete(tag);
+    else set.add(tag);
+    setTagsInput(Array.from(set).join(', '));
+  }
+
+  // Flatten all subcategories per category for the picker UI
+  const subsByCategory = useMemo(() => {
+    return (Object.keys(CATEGORY_LABELS) as CategoryKey[]).map((cat) => ({
+      cat,
+      items: subcategories[cat] ?? [],
+    }));
+  }, [subcategories]);
 
   function submit(formData: FormData) {
     setError(null);
@@ -109,12 +149,73 @@ export function ProductForm({
           </select>
         </div>
 
-        <Field
-          name="tags"
-          label="Tags (comma-separated)"
-          placeholder="bouquet, hand-tied, peony, romance"
-          defaultValue={(initial?.tags ?? []).join(', ')}
-        />
+        <div>
+          <label className="block text-xs uppercase tracking-wider text-ink/60 mb-1.5">
+            Tags (comma-separated)
+          </label>
+          <input
+            name="tags"
+            type="text"
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
+            placeholder="bouquet, hand-tied, peony, romance"
+            className="w-full border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-ink"
+          />
+          <p className="text-xs text-ink/40 mt-1">
+            Доорх дэд цэсний сонголтыг солихоор шинэчлэгдэнэ
+          </p>
+        </div>
+
+        {/* Sub-category multi-select — toggling checkbox modifies tags */}
+        <div className="bg-offwhite border border-border rounded-card p-4">
+          <h3 className="text-xs uppercase tracking-wider text-ink/60 mb-3">
+            Дэд цэсэнд нэмэх
+          </h3>
+          <p className="text-xs text-ink/50 mb-4">
+            Тухайн дэд цэсэнд харагдуулахын тулд сонгоно уу. Сонгомогц
+            tags-руу автоматаар нэмэгдэнэ.
+          </p>
+          <div className="space-y-4">
+            {subsByCategory.map(({ cat, items }) => {
+              if (items.length === 0) return null;
+              const meta = CATEGORY_LABELS[cat];
+              return (
+                <div key={cat}>
+                  <div className="text-[11px] uppercase tracking-wider text-ink/40 mb-2">
+                    {meta.icon} {meta.label}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {items.map((sub) => {
+                      const checked = currentTags.includes(sub.tag);
+                      return (
+                        <button
+                          key={`${cat}-${sub.key}`}
+                          type="button"
+                          onClick={() => toggleTag(sub.tag)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                            checked
+                              ? 'bg-ink text-white border-ink'
+                              : 'bg-white text-ink border-border hover:border-ink'
+                          }`}
+                        >
+                          {checked && <span>✓</span>}
+                          {sub.label}
+                          <span
+                            className={`text-[10px] font-mono ${
+                              checked ? 'text-white/60' : 'text-ink/40'
+                            }`}
+                          >
+                            {sub.tag}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         <Field
           name="occasion"
@@ -155,7 +256,7 @@ export function ProductForm({
           />
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 flex-wrap">
           <Toggle
             name="pet_safe"
             label="🐾 Pet-safe"
@@ -166,6 +267,27 @@ export function ProductForm({
             label="Идэвхтэй"
             defaultChecked={initial?.active ?? true}
           />
+        </div>
+
+        <div className="bg-offwhite border border-border rounded-card p-4">
+          <h3 className="text-xs uppercase tracking-wider text-ink/60 mb-3">
+            Checkout funnel — upsell
+          </h3>
+          <div className="flex items-center gap-6 flex-wrap">
+            <Toggle
+              name="is_gift_upsell"
+              label="🎁 Бэлэг алхамд харагдах"
+              defaultChecked={initial?.is_gift_upsell ?? false}
+            />
+            <Toggle
+              name="is_card_upsell"
+              label="💌 Card алхамд харагдах"
+              defaultChecked={initial?.is_card_upsell ?? false}
+            />
+          </div>
+          <p className="text-xs text-ink/50 mt-2">
+            Хэрэглэгч /checkout-ийн тухайн алхамд suggest-эж харах болно.
+          </p>
         </div>
 
         {error && (

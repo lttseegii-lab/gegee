@@ -1,11 +1,21 @@
 import Link from 'next/link';
-import { getMenuColors } from '@/lib/theme/getTheme';
+import {
+  getMenuColors,
+  getMenuImages,
+  getMenuSubcategories,
+} from '@/lib/theme/getTheme';
 import { MenuColorPicker } from '@/components/admin/MenuColorPicker';
+import { MenuImagesPicker } from '@/components/admin/MenuImagesPicker';
+import { MenuSubcategoriesPicker } from '@/components/admin/MenuSubcategoriesPicker';
 
 export const metadata = { title: 'Theme' };
 
 export default async function AdminThemePage() {
-  const initial = await getMenuColors();
+  const [colors, images, subcategories] = await Promise.all([
+    getMenuColors(),
+    getMenuImages(),
+    getMenuSubcategories(),
+  ]);
 
   return (
     <div className="p-8 max-w-5xl">
@@ -18,15 +28,48 @@ export default async function AdminThemePage() {
       </nav>
 
       <header className="mb-8">
-        <h1 className="font-serif italic text-4xl">Theme — Menu өнгө</h1>
+        <h1 className="font-serif italic text-4xl">Theme — Mega menu</h1>
         <p className="text-sm text-ink/60 mt-2 max-w-prose">
-          Үндсэн цэсний категори бүрд background өнгө сонгоно уу. Hover хийхэд
-          дотрох dropdown болон tab нь сонгосон өнгөтэй болно. Customer
+          Үндсэн цэсний өнгө болон mega menu-н зургуудыг тохируулна. Customer
           frontend (gegeen.vercel.app)-руу автоматаар шинэчлэгдэнэ.
         </p>
       </header>
 
-      <MenuColorPicker initial={initial} />
+      {/* Section: Colors */}
+      <section className="mb-12">
+        <header className="mb-5">
+          <h2 className="font-serif italic text-2xl">Background өнгө</h2>
+          <p className="text-sm text-ink/60 mt-1">
+            Категори бүрд hover үед харагдах өнгө сонгох
+          </p>
+        </header>
+        <MenuColorPicker initial={colors} />
+      </section>
+
+      {/* Section: Images */}
+      <section className="mb-12">
+        <header className="mb-5">
+          <h2 className="font-serif italic text-2xl">Mega menu зургууд</h2>
+          <p className="text-sm text-ink/60 mt-1">
+            Категори тус бүрд 0, 1 эсвэл 2 зургийн карт сонгох. Хэт олон зураг
+            байвал dropdown overflow болж дэлгэцнээс гарна.
+          </p>
+        </header>
+        <MenuImagesPicker initial={images} />
+      </section>
+
+      {/* Section: Sub-categories */}
+      <section className="mb-12">
+        <header className="mb-5">
+          <h2 className="font-serif italic text-2xl">Дэд цэс</h2>
+          <p className="text-sm text-ink/60 mt-1 max-w-prose">
+            Категори бүрд харагдах дэд цэсний линкүүд. Tag тус бүр нь
+            бүтээгдэхүүний tag-тай тохирно. Шинэ дэд цэс нэмбэл product form
+            дотор тэр tag-руу нэмж чагнуулна.
+          </p>
+        </header>
+        <MenuSubcategoriesPicker initial={subcategories} />
+      </section>
 
       <div className="mt-10 p-5 bg-white border border-border rounded-card text-sm text-ink/70">
         <h3 className="font-medium mb-2">💡 Хэрэглэгчид сэргэх хугацаа</h3>

@@ -3,6 +3,7 @@ import { MainHeader } from '@/components/header/MainHeader';
 import { SiteFooter } from '@/components/header/SiteFooter';
 import { CartProvider } from '@/components/cart/CartProvider';
 import { CartDrawer } from '@/components/cart/CartDrawer';
+import { WishlistDrawer } from '@/components/wishlist/WishlistDrawer';
 
 export default function ShopLayout({
   children,
@@ -15,6 +16,7 @@ export default function ShopLayout({
       {children}
       <SiteFooter />
       <CartDrawer />
+      <WishlistDrawer />
     </CartProvider>
   );
 }

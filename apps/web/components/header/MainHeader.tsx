@@ -2,34 +2,84 @@ import Link from 'next/link';
 import { UserMenu } from './UserMenu';
 import { CartButton } from '@/components/cart/CartButton';
 import { WishlistButton } from './WishlistButton';
-import { MegaMenu } from './MegaMenu';
-import { MEGA_TABS, type MegaTab } from './megaMenuConfig';
-import { getMenuColors, tabLabelToCategoryKey } from '@/lib/theme/getTheme';
-import { resolveColor } from '@/lib/theme/palette';
+import { NavTab } from './NavTab';
+import {
+  MEGA_TABS,
+  type MegaTab,
+  type MegaImageCard,
+  type MegaLinkItem,
+} from './megaMenuConfig';
+import {
+  getMenuColors,
+  getMenuImages,
+  getMenuSubcategories,
+  tabLabelToCategoryKey,
+} from '@/lib/theme/getTheme';
+import {
+  resolveColor,
+  resolveGradient,
+  type MenuImagesMap,
+  type MenuColorMap,
+  type MenuSubcategoriesMap,
+} from '@/lib/theme/palette';
 
 /**
- * Merge static MEGA_TABS config with DB-driven theme colors.
- * Admin can change colors in /admin/theme.
+ * Merge static MEGA_TABS config with DB-driven theme + subcategories + images.
+ * Admin configures everything from /admin/theme.
  */
 function applyTheme(
   tabs: MegaTab[],
-  colors: Awaited<ReturnType<typeof getMenuColors>>
+  colors: MenuColorMap,
+  images: MenuImagesMap,
+  subcategories: MenuSubcategoriesMap,
 ): MegaTab[] {
   return tabs.map((tab) => {
     const cat = tabLabelToCategoryKey(tab.label);
     if (!cat) return tab;
+
     const color = resolveColor(colors[cat]);
+    const dbImages: MegaImageCard[] = (images[cat] ?? []).map((img) => ({
+      label: img.label,
+      href: img.href,
+      bgClass: resolveGradient(img.gradient).bgClass,
+      emoji: img.emoji,
+    }));
+
+    // Split subcategories into col1 / col2 (default col1 if column missing)
+    const subs = subcategories[cat] ?? [];
+    const col1: MegaLinkItem[] = subs
+      .filter((s) => s.column !== 2)
+      .map((s) => ({
+        label: s.label,
+        href: `/catalog/${cat}?filter=${encodeURIComponent(s.tag)}`,
+        badge: s.badge ?? undefined,
+      }));
+    const col2: MegaLinkItem[] = subs
+      .filter((s) => s.column === 2)
+      .map((s) => ({
+        label: s.label,
+        href: `/catalog/${cat}?filter=${encodeURIComponent(s.tag)}`,
+        badge: s.badge ?? undefined,
+      }));
+
     return {
       ...tab,
       bgClass: color.bgClass,
       tabHoverClass: color.hoverClass,
+      images: dbImages,
+      col1,
+      col2,
     };
   });
 }
 
 export async function MainHeader() {
-  const menuColors = await getMenuColors();
-  const tabs = applyTheme(MEGA_TABS, menuColors);
+  const [menuColors, menuImages, menuSubcats] = await Promise.all([
+    getMenuColors(),
+    getMenuImages(),
+    getMenuSubcategories(),
+  ]);
+  const tabs = applyTheme(MEGA_TABS, menuColors, menuImages, menuSubcats);
 
   return (
     <header className="bg-white border-b border-border">
@@ -91,20 +141,7 @@ export async function MainHeader() {
       <nav className="sticky top-0 z-30 bg-white/95 backdrop-blur border-t border-border">
         <ul className="max-w-container mx-auto px-6 flex items-center justify-center gap-10 py-0 text-[15px]">
           {tabs.map((tab) => (
-            <li key={tab.label} className="relative group">
-              <Link
-                href={tab.href}
-                className={`flex items-center gap-2 py-4 px-3 rounded-t-lg transition-colors relative z-10 hover:text-ink ${tab.tabHoverClass ?? ''} ${tab.hasMega ? 'group-hover:font-semibold' : 'hover:text-pinkHot'}`}
-              >
-                {tab.label}
-                {tab.badge && (
-                  <span className="badge-yellow">
-                    {tab.badge === 'new' ? 'шинэ' : 'top'}
-                  </span>
-                )}
-              </Link>
-              {tab.hasMega && <MegaMenu tab={tab} />}
-            </li>
+            <NavTab key={tab.label} tab={tab} />
           ))}
         </ul>
       </nav>

@@ -4,19 +4,59 @@ import type { MegaTab, MegaLinkItem, MegaImageCard } from './megaMenuConfig';
 export function MegaMenu({ tab }: { tab: MegaTab }) {
   if (!tab.hasMega) return null;
 
+  const imageCount = (tab.images ?? []).length;
+
+  // Dynamic grid template — text columns flex, each image card ~150px.
+  // Combined with gap-5 (20px) and p-7 (28px) padding this keeps total
+  // panel width well within typical viewports (≤ 880px for 2 images).
+  const gridClass =
+    imageCount === 0
+      ? 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)]'
+      : imageCount === 1
+        ? 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_160px]'
+        : 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px_150px]';
+
+  const widthClass =
+    imageCount === 0
+      ? 'w-[560px]'
+      : imageCount === 1
+        ? 'w-[760px]'
+        : 'w-[880px]';
+
+  // Right-anchored tabs: pin the panel to a fixed offset from the viewport's
+  // right edge so it can never overflow regardless of where the tab sits in
+  // the nav row. This uses an effective `right: calc(100vw - <li_right>)`
+  // trick by overriding via inline style is overkill — using `right-6`
+  // relative to the <li>'s right edge would still let the panel extend
+  // leftward beyond viewport. The robust solution: cap the panel's
+  // outer max width with our explicit widthClass which fits within ~1024px
+  // viewports, then anchor to the tab's right edge.
+  const anchorClass =
+    tab.panelAlign === 'right'
+      ? 'right-0'
+      : tab.panelAlign === 'left'
+        ? 'left-0'
+        : 'left-1/2 -translate-x-1/2';
+
   return (
     <div
-      className={`absolute top-full left-1/2 -translate-x-1/2 mt-0 w-[1020px] max-w-[calc(100vw-32px)] z-50 rounded-xl shadow-soft opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto ${tab.bgClass ?? 'bg-white'}`}
+      className={`absolute top-full ${anchorClass} mt-0 ${widthClass} max-w-[calc(100vw-32px)] z-50 rounded-xl shadow-soft opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-data-[closed=true]:opacity-0 group-data-[closed=true]:invisible group-data-[closed=true]:translate-y-2 group-data-[closed=true]:pointer-events-none transition-all duration-200 pointer-events-none group-hover:pointer-events-auto overflow-hidden ${tab.bgClass ?? 'bg-white'}`}
     >
-      <div className="p-8 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_180px_180px] gap-7">
+      <div className={`p-7 grid ${gridClass} gap-5`}>
         {/* Col 1 */}
         <div>
           {tab.col1Heading && (
-            <h4 className="font-serif italic text-lg text-ink mb-4">
+            <Link
+              href={tab.href}
+              className="font-serif italic text-lg text-ink mb-4 inline-flex items-center gap-1.5 group/heading hover:text-pinkHot transition-colors"
+            >
               {tab.col1Heading}
-            </h4>
+              <span className="text-ink/30 group-hover/heading:text-pinkHot transition-colors text-base">
+                →
+              </span>
+            </Link>
           )}
-          <ul className="space-y-3.5">
+          <ul className="space-y-3.5 mt-4">
             {(tab.col1 ?? []).map((item) => (
               <MegaLink key={item.label} item={item} />
             ))}
@@ -25,7 +65,9 @@ export function MegaMenu({ tab }: { tab: MegaTab }) {
 
         {/* Col 2 */}
         <div>
-          <h4 className="font-serif italic text-lg text-transparent select-none mb-4">.</h4>
+          <h4 className="font-serif italic text-lg text-transparent select-none mb-4">
+            .
+          </h4>
           <ul className="space-y-3.5">
             {(tab.col2 ?? []).map((item) => (
               <MegaLink key={item.label} item={item} />
@@ -33,9 +75,9 @@ export function MegaMenu({ tab }: { tab: MegaTab }) {
           </ul>
         </div>
 
-        {/* Image cards */}
-        {(tab.images ?? []).map((img) => (
-          <MegaImage key={img.label} img={img} />
+        {/* Image cards (0–2) */}
+        {(tab.images ?? []).map((img, idx) => (
+          <MegaImage key={`${img.label}-${idx}`} img={img} />
         ))}
       </div>
     </div>
@@ -64,16 +106,16 @@ function MegaImage({ img }: { img: MegaImageCard }) {
   return (
     <Link
       href={img.href}
-      className="bg-white rounded-xl overflow-hidden flex flex-col group/img hover:-translate-y-0.5 transition-transform"
+      className="bg-white rounded-xl overflow-hidden flex flex-col group/img hover:-translate-y-0.5 transition-transform min-w-0"
     >
       <div
-        className={`aspect-square ${img.bgClass} flex items-center justify-center text-5xl`}
+        className={`aspect-square ${img.bgClass} flex items-center justify-center text-4xl`}
       >
         {img.emoji}
       </div>
-      <div className="px-3 py-3 text-sm font-medium text-ink flex items-center justify-between gap-1">
-        <span>{img.label}</span>
-        <span className="text-ink/40 group-hover/img:text-ink transition-colors">
+      <div className="px-2.5 py-2.5 text-[13px] font-medium text-ink flex items-center justify-between gap-1">
+        <span className="truncate">{img.label}</span>
+        <span className="text-ink/40 group-hover/img:text-ink transition-colors shrink-0 text-base">
           →
         </span>
       </div>

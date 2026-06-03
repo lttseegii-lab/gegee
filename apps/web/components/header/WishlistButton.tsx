@@ -1,14 +1,15 @@
 'use client';
 
-import Link from 'next/link';
-import { useWishlistCount } from '@/stores/wishlistStore';
+import { useWishlistCount, useWishlistStore } from '@/stores/wishlistStore';
 
 export function WishlistButton() {
   const count = useWishlistCount();
+  const open = useWishlistStore((s) => s.open);
 
   return (
-    <Link
-      href="/account/wishlist"
+    <button
+      type="button"
+      onClick={open}
       className="relative inline-flex items-center text-ink hover:text-pinkHot transition-colors"
       aria-label={`Хадгалсан — ${count} бүтээгдэхүүн`}
       title="Хадгалсан"
@@ -30,6 +31,6 @@ export function WishlistButton() {
           {count}
         </span>
       )}
-    </Link>
+    </button>
   );
 }

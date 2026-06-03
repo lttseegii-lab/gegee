@@ -65,6 +65,8 @@ export async function createProduct(formData: FormData) {
     img_prompt: asStr(formData.get('img_prompt')) || null,
     img_url: asStr(formData.get('img_url')) || null,
     active: asBool(formData.get('active')),
+    is_gift_upsell: asBool(formData.get('is_gift_upsell')),
+    is_card_upsell: asBool(formData.get('is_card_upsell')),
   };
 
   const { error } = await svc.from('products').insert(payload);
@@ -105,6 +107,8 @@ export async function updateProduct(id: string, formData: FormData) {
     img_prompt: asStr(formData.get('img_prompt')) || null,
     img_url: asStr(formData.get('img_url')) || null,
     active: asBool(formData.get('active')),
+    is_gift_upsell: asBool(formData.get('is_gift_upsell')),
+    is_card_upsell: asBool(formData.get('is_card_upsell')),
   };
 
   const { error } = await svc.from('products').update(payload).eq('id', id);

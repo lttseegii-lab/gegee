@@ -2,10 +2,14 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { createOrderFromCart } from '@/app/(shop)/checkout/actions';
 import type { AddressRow } from '@/types/database';
 import { useCartStore } from '@/stores/cartStore';
+import {
+  readCardMessageDraft,
+  clearCardMessageDraft,
+} from './CardMessageEditor';
 
 export function CheckoutForm({ addresses }: { addresses: AddressRow[] }) {
   const router = useRouter();
@@ -13,9 +17,15 @@ export function CheckoutForm({ addresses }: { addresses: AddressRow[] }) {
     addresses.find((a) => a.is_default)?.id ?? addresses[0]?.id ?? null
   );
   const [notes, setNotes] = useState('');
+  const [cardMessage, setCardMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const clearLocalCart = useCartStore((s) => s.clear);
+
+  // Load card message draft from localStorage on mount
+  useEffect(() => {
+    setCardMessage(readCardMessageDraft());
+  }, []);
 
   function submit() {
     if (!selectedId) {
@@ -24,13 +34,18 @@ export function CheckoutForm({ addresses }: { addresses: AddressRow[] }) {
     }
     setError(null);
     startTransition(async () => {
-      const res = await createOrderFromCart(selectedId, notes || undefined);
+      const res = await createOrderFromCart(
+        selectedId,
+        notes || undefined,
+        cardMessage || undefined
+      );
       if (!res.ok) {
         setError(res.error ?? 'Алдаа гарлаа');
         return;
       }
-      // Clear client-side cart cache as well (server-side already cleared)
+      // Clear client-side cart cache + card message draft
       await clearLocalCart();
+      clearCardMessageDraft();
       // Route to QPay payment page (auto-generates invoice + shows QR)
       router.push(`/checkout/payment?orderId=${res.orderId}`);
     });
@@ -111,6 +126,24 @@ export function CheckoutForm({ addresses }: { addresses: AddressRow[] }) {
           ))}
         </ul>
       </section>
+
+      {/* Card message preview (from step 3) */}
+      {cardMessage && (
+        <section>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-medium">Card-ын мессеж</h2>
+            <Link
+              href="/checkout?step=card"
+              className="text-xs text-ink/60 hover:text-ink"
+            >
+              Засах →
+            </Link>
+          </div>
+          <div className="bg-blush/40 border border-border rounded-card px-4 py-3 text-sm italic text-ink/80">
+            “{cardMessage}”
+          </div>
+        </section>
+      )}
 
       {/* Notes */}
       <section>

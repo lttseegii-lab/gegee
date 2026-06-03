@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ProductForm } from '@/components/admin/ProductForm';
+import { getMenuSubcategories } from '@/lib/theme/getTheme';
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   return { title: params.id };
@@ -13,11 +14,10 @@ export default async function AdminProductDetail({
   params: { id: string };
 }) {
   const supabase = createClient();
-  const { data: product } = await supabase
-    .from('products')
-    .select('*')
-    .eq('id', params.id)
-    .single();
+  const [{ data: product }, subcategories] = await Promise.all([
+    supabase.from('products').select('*').eq('id', params.id).single(),
+    getMenuSubcategories(),
+  ]);
   if (!product) notFound();
 
   return (
@@ -28,7 +28,7 @@ export default async function AdminProductDetail({
         <span className="text-ink font-medium font-mono">{product.id}</span>
       </nav>
       <h1 className="font-serif italic text-4xl mb-8">{product.name}</h1>
-      <ProductForm mode="edit" initial={product} />
+      <ProductForm mode="edit" initial={product} subcategories={subcategories} />
     </div>
   );
 }

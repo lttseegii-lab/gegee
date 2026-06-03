@@ -10,7 +10,7 @@ export function HeartButton({
   size?: 'sm' | 'md' | 'lg';
 }) {
   const inList = useWishlistStore((s) => s.productIds.includes(productId));
-  const toggle = useWishlistStore((s) => s.toggle);
+  const toggleItem = useWishlistStore((s) => s.toggleItem);
 
   const sizeClasses = {
     sm: 'w-8 h-8 text-base',
@@ -24,7 +24,7 @@ export function HeartButton({
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        toggle(productId);
+        toggleItem(productId);
       }}
       aria-label={inList ? 'Хадгалснаас хасах' : 'Хадгалах'}
       aria-pressed={inList}

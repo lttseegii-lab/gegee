@@ -23,7 +23,8 @@ export interface CreateOrderResult {
  */
 export async function createOrderFromCart(
   addressId: number,
-  notes?: string
+  notes?: string,
+  cardMessage?: string
 ): Promise<CreateOrderResult> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -105,6 +106,7 @@ export async function createOrderFromCart(
       delivery_fee,
       total,
       notes: notes ?? null,
+      card_message: cardMessage?.trim() || null,
       status: 'pending_payment',
     })
     .select('id, order_code, total')
