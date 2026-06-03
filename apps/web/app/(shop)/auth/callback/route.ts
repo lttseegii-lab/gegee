@@ -12,6 +12,22 @@ export async function GET(request: NextRequest) {
     const supabase = createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      // Brand-new user? Route them through /onboarding before delivering them
+      // to `next`. Onboarding completion redirects back to `next` itself.
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('onboarded_at')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (profile && profile.onboarded_at == null) {
+          const onboardingUrl = `/onboarding?next=${encodeURIComponent(next)}`;
+          return NextResponse.redirect(`${origin}${onboardingUrl}`);
+        }
+      }
       return NextResponse.redirect(`${origin}${next}`);
     }
     console.error('OAuth code exchange failed:', error);

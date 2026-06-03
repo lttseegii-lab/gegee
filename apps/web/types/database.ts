@@ -395,9 +395,11 @@ export type Database = {
           id: string
           joined_at: string
           name: string
+          onboarded_at: string | null
           phone: string | null
           provider: string | null
           role: string
+          signature_mood: string | null
           updated_at: string
         }
         Insert: {
@@ -406,9 +408,11 @@ export type Database = {
           id: string
           joined_at?: string
           name: string
+          onboarded_at?: string | null
           phone?: string | null
           provider?: string | null
           role?: string
+          signature_mood?: string | null
           updated_at?: string
         }
         Update: {
@@ -417,9 +421,11 @@ export type Database = {
           id?: string
           joined_at?: string
           name?: string
+          onboarded_at?: string | null
           phone?: string | null
           provider?: string | null
           role?: string
+          signature_mood?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -13,12 +13,28 @@ export async function signInWithEmail(formData: FormData) {
     return { error: 'Имэйл ба нууц үгээ оруулна уу' };
   }
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
   if (error) {
     return { error: error.message };
   }
 
   revalidatePath('/', 'layout');
+
+  // If user hasn't completed onboarding, route them through it first.
+  if (data.user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarded_at')
+      .eq('id', data.user.id)
+      .maybeSingle();
+    if (profile && profile.onboarded_at == null) {
+      redirect('/onboarding?next=/account/profile');
+    }
+  }
+
   redirect('/account/profile');
 }
 
