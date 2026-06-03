@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: '/admin/orders', label: 'Захиалга', icon: '📦' },
   { href: '/admin/products', label: 'Бүтээгдэхүүн', icon: '🌸' },
   { href: '/admin/customers', label: 'Хэрэглэгч', icon: '👥' },
+  { href: '/admin/rewards', label: 'Rewards', icon: '🌟' },
   { href: '/admin/capacity', label: 'Capacity', icon: '📅' },
   { href: '/admin/theme', label: 'Theme', icon: '🎨' },
 ];

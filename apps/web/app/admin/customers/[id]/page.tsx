@@ -114,6 +114,13 @@ export default async function CustomerDetailPage({
           {rewards && (
             <div className="text-xs text-ink/60 mt-2">
               {rewards.tier} tier · {(rewards.total_points ?? 0).toLocaleString()} оноо
+              {' · '}
+              <Link
+                href={`/admin/rewards/${params.id}`}
+                className="text-pinkHot hover:underline"
+              >
+                Удирдах →
+              </Link>
             </div>
           )}
         </div>
