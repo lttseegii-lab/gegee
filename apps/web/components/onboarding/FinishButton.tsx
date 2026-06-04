@@ -38,7 +38,7 @@ export function FinishButton({
       {isPending
         ? 'Хадгалж байна…'
         : variant === 'skip'
-          ? 'Алгасаад дуусгах'
+          ? 'Алгасах'
           : label}
     </button>
   );

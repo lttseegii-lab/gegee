@@ -4,21 +4,25 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { MOODS_BY_KEY } from '@/lib/moods';
+import { ONBOARDING_FLOWERS_BY_KEY } from '@/lib/onboarding-flowers';
 
-export async function saveSignatureMood(moodKey: string) {
+export async function saveSignatureMood(key: string) {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/auth/login');
 
-  if (!MOODS_BY_KEY[moodKey]) {
-    return { error: 'Mood буруу байна' };
+  // The column is named `signature_mood` for legacy reasons but it now stores
+  // either an onboarding flower key (preferred) OR an old mood key (legacy data).
+  // Accept both so we don't break the existing signature_mood values in the DB.
+  if (!ONBOARDING_FLOWERS_BY_KEY[key] && !MOODS_BY_KEY[key]) {
+    return { error: 'Сонголт буруу байна' };
   }
 
   const { error } = await supabase
     .from('profiles')
-    .update({ signature_mood: moodKey })
+    .update({ signature_mood: key })
     .eq('id', user.id);
   if (error) return { error: error.message };
 

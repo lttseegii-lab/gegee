@@ -2,7 +2,10 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { MOODS } from '@/lib/moods';
+import {
+  ONBOARDING_FLOWERS,
+  flowerImageUrl,
+} from '@/lib/onboarding-flowers';
 import { saveSignatureMood } from '@/app/onboarding/actions';
 
 export function MoodPicker({
@@ -37,31 +40,43 @@ export function MoodPicker({
 
   return (
     <div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
-        {MOODS.map((m) => {
-          const active = selected === m.key;
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+        {ONBOARDING_FLOWERS.map((f) => {
+          const active = selected === f.key;
           return (
             <button
-              key={m.key}
+              key={f.key}
               type="button"
-              onClick={() => setSelected(m.key)}
+              onClick={() => setSelected(f.key)}
               disabled={isPending}
-              className={`relative ${m.bgClass} rounded-card p-4 text-left transition-all hover:-translate-y-0.5 ${
+              className={`group relative bg-white border rounded-card overflow-hidden text-left transition-all hover:-translate-y-0.5 ${
                 active
-                  ? 'ring-2 ring-ink ring-offset-2 ring-offset-offwhite'
-                  : 'ring-1 ring-transparent'
+                  ? 'border-ink ring-2 ring-ink ring-offset-2 ring-offset-offwhite'
+                  : 'border-border'
               }`}
             >
-              <div className="text-3xl mb-2">{m.emoji}</div>
-              <div className="font-medium text-sm text-ink">{m.label}</div>
-              <p className="text-xs text-ink/60 mt-1 leading-snug line-clamp-2">
-                {m.description}
-              </p>
-              {active && (
-                <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-ink text-white text-[10px] font-bold flex items-center justify-center">
-                  ✓
-                </span>
-              )}
+              <div
+                className={`relative aspect-square ${f.tintClass} overflow-hidden`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={flowerImageUrl(f, 400)}
+                  alt={f.label}
+                  loading="lazy"
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                />
+                {active && (
+                  <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-ink text-white text-xs font-bold flex items-center justify-center shadow">
+                    ✓
+                  </span>
+                )}
+              </div>
+              <div className="p-3">
+                <div className="font-medium text-sm text-ink">{f.label}</div>
+                <p className="text-xs text-ink/60 mt-0.5 leading-snug line-clamp-2">
+                  {f.description}
+                </p>
+              </div>
             </button>
           );
         })}

@@ -74,26 +74,17 @@ function WelcomeStep({ name, next }: { name: string; next: string }) {
       <div className="text-[11px] uppercase tracking-[0.2em] text-pinkHot mb-3">
         Тавтай морил
       </div>
-      <h1 className="font-serif italic text-4xl sm:text-5xl mb-4">
+      <h1 className="font-serif italic text-4xl sm:text-5xl mb-10">
         Сайн уу, <em>{name || 'найз'}</em>
       </h1>
-      <p className="text-ink/60 mb-10 leading-relaxed">
-        Бид таны Gegeen Memory Garden-ийг 2 хурдан алхамаар бэлдэе. Хэдхэн
-        минут — алгасч ч болно.
-      </p>
 
-      <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+      <div className="flex justify-center">
         <Link
           href={`/onboarding?step=mood&next=${encodeURIComponent(next)}`}
-          className="btn-primary w-full sm:w-auto"
+          className="btn-primary"
         >
           Эхлэх →
         </Link>
-        <FinishButton
-          next={next}
-          variant="skip"
-          className="text-sm text-ink/60 hover:text-ink"
-        />
       </div>
     </section>
   );
@@ -115,13 +106,9 @@ function MoodStep({
         <div className="text-[11px] uppercase tracking-[0.2em] text-pinkHot mb-3">
           Алхам 1 / 2
         </div>
-        <h2 className="font-serif italic text-3xl sm:text-4xl mb-3">
-          Танд аль нь ойр вэ?
+        <h2 className="font-serif italic text-3xl sm:text-4xl">
+          Та өөрийгөө цэцэгтэй зүйрлэх үү?
         </h2>
-        <p className="text-ink/60 max-w-lg mx-auto">
-          Цэцэг бол сэтгэлийн илэрхийлэл. Танай мэдрэмжийг хамгийн сайн
-          илэрхийлэх mood-оо сонгоно уу.
-        </p>
       </header>
 
       <MoodPicker initial={initial} next={next} />
@@ -149,13 +136,16 @@ async function MemoryStep({ userId, next }: { userId: string; next: string }) {
         <div className="text-[11px] uppercase tracking-[0.2em] text-pinkHot mb-3">
           Алхам 2 / 2
         </div>
-        <h2 className="font-serif italic text-3xl sm:text-4xl mb-3">
-          Memory Garden
+        <h2 className="font-serif italic text-3xl sm:text-4xl mb-4">
+          Энэ л өдрийг мартаж болохгүй шүү
         </h2>
         <p className="text-ink/60 max-w-lg mx-auto leading-relaxed">
-          Хайртай хүмүүсийнхээ чухал огноог бүртгээрэй. Бид сануулаад, тухайн
-          үед цэцэг санал болгоно. Хүсвэл одоо нэг огноо нэмж эсвэл алгасч
-          болно.
+          Цэцэгчин найзууд нь мартаж болохгүй өдрийг нь сануулж, хамгийн
+          тохиромжтой мөчид хамгийн сайхан цэцгийг хүргэхэд тусална.
+        </p>
+        <p className="text-ink/60 max-w-lg mx-auto leading-relaxed mt-3">
+          Хайр, талархал, халамжаа зөв цагт нь илэрхийлэхэд бид үргэлж хамт
+          байна.
         </p>
       </header>
 
@@ -244,8 +234,8 @@ function DoneStep({
         </p>
       ) : (
         <p className="text-ink/70 mb-10 leading-relaxed">
-          Gegeen-руу тавтай морил. Хүссэн үедээ Memory Garden-доо буцаж
-          огноо нэмж болно.
+          Нандин мөчүүдээ бидэнд даатгасанд баярлалаа. Цэцэгчин найзууд нь
+          хичээнэ.
         </p>
       )}
 

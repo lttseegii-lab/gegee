@@ -21,7 +21,7 @@ export function MemoryDateAdder() {
       onClick={() => setOpen(true)}
       className="w-full border-2 border-dashed border-border rounded-card py-6 text-sm text-ink/60 hover:border-ink hover:text-ink transition-colors"
     >
-      + Шинэ огноо нэмэх
+      + Мартаж болохгүй өдөр
     </button>
   );
 }
