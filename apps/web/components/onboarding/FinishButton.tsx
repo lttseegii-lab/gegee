@@ -21,9 +21,12 @@ export function FinishButton({
   function onClick() {
     startTransition(async () => {
       const res = await finishOnboarding(next);
-      if (res.ok) {
-        // Show the "done" step briefly before sending them on
-        router.push(`/onboarding?step=done&next=${encodeURIComponent(next)}`);
+      if (res?.ok) {
+        const params = new URLSearchParams({ step: 'done', next });
+        if (res.awardedPoints && res.awardedPoints > 0) {
+          params.set('bonus', String(res.awardedPoints));
+        }
+        router.push(`/onboarding?${params.toString()}`);
       }
     });
   }

@@ -9,10 +9,15 @@ import {
 import { MoodPicker } from '@/components/onboarding/MoodPicker';
 import { MemoryDateAdder } from '@/components/account/MemoryDateAdder';
 import { FinishButton, DoneButton } from '@/components/onboarding/FinishButton';
+import { FlowerSalute } from '@/components/onboarding/FlowerSalute';
 import { MOODS_BY_KEY } from '@/lib/moods';
 import { OCCASIONS, formatMonthDay } from '@/lib/memory/occasions';
 
-type SearchParams = { step?: string | string[]; next?: string | string[] };
+type SearchParams = {
+  step?: string | string[];
+  next?: string | string[];
+  bonus?: string | string[];
+};
 
 export default async function OnboardingPage({
   searchParams,
@@ -29,6 +34,9 @@ export default async function OnboardingPage({
   const nextRaw = typeof searchParams.next === 'string' ? searchParams.next : '/';
   // Sanitize next: must be a relative path
   const next = nextRaw.startsWith('/') ? nextRaw : '/';
+  const bonusRaw =
+    typeof searchParams.bonus === 'string' ? searchParams.bonus : '';
+  const bonusPoints = Math.max(0, Math.min(50000, parseInt(bonusRaw, 10) || 0));
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -58,6 +66,7 @@ export default async function OnboardingPage({
           name={firstName}
           mood={profile?.signature_mood ?? null}
           next={next}
+          bonusPoints={bonusPoints}
         />
       )}
     </div>
@@ -212,14 +221,19 @@ function DoneStep({
   name,
   mood,
   next,
+  bonusPoints,
 }: {
   name: string;
   mood: string | null;
   next: string;
+  bonusPoints: number;
 }) {
   const m = mood ? MOODS_BY_KEY[mood] : null;
+  const showCelebration = bonusPoints > 0;
   return (
-    <section className="text-center max-w-xl mx-auto">
+    <section className="text-center max-w-xl mx-auto relative">
+      {showCelebration && <FlowerSalute />}
+
       <div className="text-6xl mb-6">{m?.emoji ?? '✨'}</div>
       <div className="text-[11px] uppercase tracking-[0.2em] text-pinkHot mb-3">
         Бэлэн
@@ -227,6 +241,21 @@ function DoneStep({
       <h1 className="font-serif italic text-4xl sm:text-5xl mb-4">
         Баярлалаа, <em>{name || 'найз'}</em>
       </h1>
+
+      {showCelebration && (
+        <div className="inline-flex items-center gap-3 bg-gradient-to-r from-pinkHot/15 via-yellow-pale to-mint/40 border border-pinkHot/30 rounded-full px-5 py-3 mb-6 shadow-card">
+          <span className="text-3xl">🎁</span>
+          <div className="text-left">
+            <div className="font-serif italic text-2xl text-ink leading-none">
+              +{bonusPoints.toLocaleString()} оноо
+            </div>
+            <div className="text-[11px] uppercase tracking-wider text-ink/60 mt-1">
+              Тавтай морилох бэлэг
+            </div>
+          </div>
+        </div>
+      )}
+
       {m ? (
         <p className="text-ink/70 mb-10 leading-relaxed">
           Та <strong>{m.label}</strong> {m.emoji}-ийг сонголоо. Бид танай{' '}

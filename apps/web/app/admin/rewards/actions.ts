@@ -3,6 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { createServiceClient } from '@/lib/supabase/server';
 import { assertAdmin } from '@/lib/auth/admin';
+import {
+  DEFAULT_REWARDS_CONFIG,
+  sanitizeRewardsConfig,
+} from '@/lib/rewards/config';
+import type { Json } from '@/types/database';
 
 function asInt(v: FormDataEntryValue | null): number | null {
   const s = typeof v === 'string' ? v.trim() : '';
@@ -72,6 +77,59 @@ export async function adjustUserPoints(userId: string, formData: FormData) {
   revalidatePath(`/admin/customers/${userId}`);
   revalidatePath('/account/rewards');
   return { ok: true };
+}
+
+// ============================================================
+// Signup bonus configuration
+// ============================================================
+
+export async function updateSignupBonus(formData: FormData) {
+  try {
+    await assertAdmin();
+  } catch {
+    return { error: 'Forbidden' };
+  }
+
+  const points = asInt(formData.get('signupBonus'));
+  if (points == null) {
+    return { error: 'Оноо тоо байх ёстой' };
+  }
+
+  const cleaned = sanitizeRewardsConfig({ signupBonus: points });
+
+  const svc = createServiceClient();
+  const { error } = await svc.from('site_settings').upsert(
+    {
+      key: 'rewards_config',
+      value: cleaned as unknown as Json,
+    },
+    { onConflict: 'key' }
+  );
+  if (error) return { error: error.message };
+
+  revalidatePath('/admin/rewards');
+  return { ok: true, signupBonus: cleaned.signupBonus };
+}
+
+export async function resetSignupBonus() {
+  try {
+    await assertAdmin();
+  } catch {
+    return { error: 'Forbidden' };
+  }
+
+  const svc = createServiceClient();
+  const { error } = await svc.from('site_settings').upsert(
+    {
+      key: 'rewards_config',
+      value: DEFAULT_REWARDS_CONFIG as unknown as Json,
+    },
+    { onConflict: 'key' }
+  );
+  if (error) return { error: error.message };
+
+  revalidatePath('/admin/rewards');
+  return { ok: true, signupBonus: DEFAULT_REWARDS_CONFIG.signupBonus };
 }
 
 export async function deleteLedgerEntry(userId: string, entryId: number) {

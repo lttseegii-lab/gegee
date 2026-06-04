@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { TIERS } from '@/lib/rewards/tiers';
+import { getRewardsConfig } from '@/lib/rewards/getConfig';
+import { SignupBonusEditor } from '@/components/admin/SignupBonusEditor';
 
 export const metadata = { title: 'Rewards' };
 
@@ -16,11 +18,14 @@ export default async function AdminRewardsPage({
 
   // Fetch all rewards rows joined with profile info.
   // user_rewards has no FK to profiles, but both reference auth.users via id.
-  const { data: rewardsRows } = await supabase
-    .from('user_rewards')
-    .select('user_id, total_points, total_spent, tier, updated_at')
-    .order('total_spent', { ascending: false })
-    .limit(500);
+  const [{ data: rewardsRows }, rewardsConfig] = await Promise.all([
+    supabase
+      .from('user_rewards')
+      .select('user_id, total_points, total_spent, tier, updated_at')
+      .order('total_spent', { ascending: false })
+      .limit(500),
+    getRewardsConfig(),
+  ]);
 
   const userIds = (rewardsRows ?? []).map((r) => r.user_id);
   const { data: profiles } = userIds.length
@@ -76,6 +81,9 @@ export default async function AdminRewardsPage({
           нэмж, хасах боломжтой.
         </p>
       </header>
+
+      {/* Signup bonus editor */}
+      <SignupBonusEditor initial={rewardsConfig.signupBonus} />
 
       {/* Stats summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
