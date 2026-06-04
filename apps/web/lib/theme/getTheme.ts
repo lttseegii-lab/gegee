@@ -8,9 +8,12 @@ import {
   DEFAULT_MENU_COLORS,
   DEFAULT_MENU_IMAGES,
   DEFAULT_MENU_SUBCATEGORIES,
+  DEFAULT_HERO_BANNERS,
+  sanitizeHeroBannerConfig,
   type MenuColorMap,
   type MenuImagesMap,
   type MenuSubcategoriesMap,
+  type HeroBannerConfig,
   type CategoryKey,
 } from './palette';
 
@@ -72,6 +75,21 @@ export async function getMenuSubcategories(): Promise<MenuSubcategoriesMap> {
     };
   } catch {
     return DEFAULT_MENU_SUBCATEGORIES;
+  }
+}
+
+export async function getHeroBanners(): Promise<HeroBannerConfig> {
+  try {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'hero_banners')
+      .maybeSingle();
+    if (!data?.value) return DEFAULT_HERO_BANNERS;
+    return sanitizeHeroBannerConfig(data.value);
+  } catch {
+    return DEFAULT_HERO_BANNERS;
   }
 }
 

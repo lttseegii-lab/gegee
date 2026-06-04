@@ -194,3 +194,71 @@ export function getAllTags(subcategories: MenuSubcategoriesMap): string[] {
   }
   return Array.from(set).sort();
 }
+
+
+// ============================================================
+// Hero banners — admin-editable rotating homepage hero.
+// Each slide has an image (URL or uploaded), heading, subheading.
+// Stored under site_settings.hero_banners.
+// ============================================================
+
+export interface HeroBanner {
+  /** Public image URL (Supabase Storage, external CDN, or Pollinations.ai). Empty = use fallback decoration. */
+  image_url: string;
+  /** H1 heading shown over/beside the image */
+  heading: string;
+  /** Short paragraph under the heading */
+  subheading: string;
+}
+
+export interface HeroBannerConfig {
+  slides: HeroBanner[];
+  /** Auto-rotate interval in milliseconds (0 = no auto-rotate) */
+  interval_ms: number;
+}
+
+export const DEFAULT_HERO_BANNERS: HeroBannerConfig = {
+  slides: [
+    {
+      image_url: '',
+      heading: 'Цэцэг илгээ. Урлагийг задал.',
+      subheading:
+        'AI чиний хайр, баяр, талархлыг ойлгож хамгийн тохирох цэцгийг сонгож өгнө. Letterbox-аас атриум хүртэл.',
+    },
+  ],
+  interval_ms: 6000,
+};
+
+export function sanitizeHeroBannerConfig(
+  raw: unknown
+): HeroBannerConfig {
+  if (!raw || typeof raw !== 'object') return DEFAULT_HERO_BANNERS;
+  const obj = raw as Record<string, unknown>;
+  const rawSlides = Array.isArray(obj.slides) ? obj.slides : [];
+  const slides: HeroBanner[] = rawSlides
+    .map((s) => {
+      if (!s || typeof s !== 'object') return null;
+      const v = s as Record<string, unknown>;
+      const image_url =
+        typeof v.image_url === 'string' ? v.image_url.trim().slice(0, 500) : '';
+      const heading =
+        typeof v.heading === 'string'
+          ? v.heading.trim().slice(0, 120)
+          : '';
+      const subheading =
+        typeof v.subheading === 'string'
+          ? v.subheading.trim().slice(0, 400)
+          : '';
+      if (!heading && !image_url) return null;
+      return { image_url, heading, subheading };
+    })
+    .filter((s): s is HeroBanner => s != null);
+  const interval_ms =
+    typeof obj.interval_ms === 'number' &&
+    Number.isFinite(obj.interval_ms) &&
+    obj.interval_ms >= 0
+      ? Math.min(60000, Math.max(0, Math.floor(obj.interval_ms)))
+      : DEFAULT_HERO_BANNERS.interval_ms;
+  if (slides.length === 0) return DEFAULT_HERO_BANNERS;
+  return { slides, interval_ms };
+}

@@ -3,18 +3,21 @@ import {
   getMenuColors,
   getMenuImages,
   getMenuSubcategories,
+  getHeroBanners,
 } from '@/lib/theme/getTheme';
 import { MenuColorPicker } from '@/components/admin/MenuColorPicker';
 import { MenuImagesPicker } from '@/components/admin/MenuImagesPicker';
 import { MenuSubcategoriesPicker } from '@/components/admin/MenuSubcategoriesPicker';
+import { HeroBannersPicker } from '@/components/admin/HeroBannersPicker';
 
 export const metadata = { title: 'Theme' };
 
 export default async function AdminThemePage() {
-  const [colors, images, subcategories] = await Promise.all([
+  const [colors, images, subcategories, heroBanners] = await Promise.all([
     getMenuColors(),
     getMenuImages(),
     getMenuSubcategories(),
+    getHeroBanners(),
   ]);
 
   return (
@@ -69,6 +72,19 @@ export default async function AdminThemePage() {
           </p>
         </header>
         <MenuSubcategoriesPicker initial={subcategories} />
+      </section>
+
+      {/* Section: Hero banners (homepage carousel) */}
+      <section className="mb-12">
+        <header className="mb-5">
+          <h2 className="font-serif italic text-2xl">Нүүр хуудасны banner</h2>
+          <p className="text-sm text-ink/60 mt-1 max-w-prose">
+            Нүүр хуудасны hero хэсэгт автоматаар солигдох banner зургуудыг
+            тохируулна. URL paste эсвэл файл upload хийж болно. Banner бүрд
+            өөрийн гарчиг, тайлбартай.
+          </p>
+        </header>
+        <HeroBannersPicker initial={heroBanners} />
       </section>
 
       <div className="mt-10 p-5 bg-white border border-border rounded-card text-sm text-ink/70">

@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { MoodPicker } from '@/components/home/MoodPicker';
+import { HeroCarousel } from '@/components/home/HeroCarousel';
+import { getHeroBanners } from '@/lib/theme/getTheme';
 
 const COLLECTION_CIRCLES: { label: string; href: string; emoji: string }[] = [
   { label: 'Бүгд', href: '/catalog/all', emoji: '✻' },
@@ -16,56 +18,23 @@ const COLLECTION_CIRCLES: { label: string; href: string; emoji: string }[] = [
 
 export default async function HomePage() {
   const supabase = createClient();
-  const { data: products } = await supabase
-    .from('products')
-    .select('*')
-    .eq('active', true)
-    .order('reviews', { ascending: false })
-    .limit(8);
+  const [{ data: products }, heroConfig] = await Promise.all([
+    supabase
+      .from('products')
+      .select('*')
+      .eq('active', true)
+      .order('reviews', { ascending: false })
+      .limit(8),
+    getHeroBanners(),
+  ]);
 
   return (
     <main>
-      {/* Hero */}
-      <section className="bg-blush">
-        <div className="max-w-container mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <p className="text-[13px] uppercase tracking-[0.2em] text-ink/60 mb-4">
-              est. 2026
-            </p>
-            <h1 className="font-serif text-5xl lg:text-6xl leading-[1.05] text-ink">
-              Цэцэг илгээ. <em className="font-serif italic">Урлагийг задал.</em>
-            </h1>
-            <p className="mt-6 text-ink/70 text-lg max-w-md">
-              AI чиний хайр, баяр, талархлыг ойлгож хамгийн тохирох цэцгийг
-              сонгож өгнө. Letterbox-аас атриум хүртэл.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link href="/recommend" className="btn-primary">
-                ✨ AI санал авах
-              </Link>
-              <Link href="/catalog/all" className="btn-ghost">
-                Цэцэг үзэх
-              </Link>
-              <Link href="/diy" className="btn-ghost">
-                Өөрийн гараар →
-              </Link>
-            </div>
-            <div className="mt-10 flex items-center gap-6 text-sm text-ink/60">
-              <span>★ 4.9 / 5</span>
-              <span>·</span>
-              <span>12,000+ хэрэглэгч</span>
-              <span>·</span>
-              <span>B Corp</span>
-            </div>
-          </div>
-          <div className="aspect-square bg-white/40 rounded-card overflow-hidden">
-            {/* Hero image — replace with real asset in Sprint 5 */}
-            <div className="w-full h-full flex items-center justify-center text-pinkHot text-9xl">
-              ✻
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero — admin-editable rotating carousel */}
+      <HeroCarousel
+        slides={heroConfig.slides}
+        intervalMs={heroConfig.interval_ms}
+      />
 
       {/* Mood picker — "Care wildly" — Ямар мэдрэмж илэрхийлэх вэ */}
       <MoodPicker />

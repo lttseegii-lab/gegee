@@ -8,12 +8,15 @@ import {
   DEFAULT_MENU_COLORS,
   DEFAULT_MENU_IMAGES,
   DEFAULT_MENU_SUBCATEGORIES,
+  DEFAULT_HERO_BANNERS,
   IMAGE_GRADIENT_BY_KEY,
+  sanitizeHeroBannerConfig,
   type MenuColorMap,
   type MenuImagesMap,
   type MenuSubcategoriesMap,
   type MenuSubcategory,
   type MegaImageConfig,
+  type HeroBannerConfig,
   type CategoryKey,
 } from '@/lib/theme/palette';
 import type { Json } from '@/types/database';
@@ -202,4 +205,102 @@ export async function resetMenuSubcategories() {
 
   revalidatePath('/', 'layout');
   return { ok: true };
+}
+
+// ============================================================
+// Hero banners (homepage carousel)
+// ============================================================
+
+export async function updateHeroBanners(payload: HeroBannerConfig) {
+  try {
+    await assertAdmin();
+  } catch {
+    return { error: 'Forbidden' };
+  }
+
+  const cleaned = sanitizeHeroBannerConfig(payload);
+  // Limit slides to a reasonable max
+  const trimmed: HeroBannerConfig = {
+    slides: cleaned.slides.slice(0, 6),
+    interval_ms: cleaned.interval_ms,
+  };
+
+  const svc = createServiceClient();
+  const { error } = await svc
+    .from('site_settings')
+    .upsert(
+      { key: 'hero_banners', value: trimmed as unknown as Json },
+      { onConflict: 'key' }
+    );
+  if (error) return { error: error.message };
+
+  revalidatePath('/', 'layout');
+  revalidatePath('/');
+  return { ok: true };
+}
+
+export async function resetHeroBanners() {
+  try {
+    await assertAdmin();
+  } catch {
+    return { error: 'Forbidden' };
+  }
+
+  const svc = createServiceClient();
+  const { error } = await svc
+    .from('site_settings')
+    .upsert(
+      { key: 'hero_banners', value: DEFAULT_HERO_BANNERS as unknown as Json },
+      { onConflict: 'key' }
+    );
+  if (error) return { error: error.message };
+
+  revalidatePath('/', 'layout');
+  revalidatePath('/');
+  return { ok: true };
+}
+
+/**
+ * Upload a hero banner image to Supabase Storage and return its public URL.
+ * Called from the admin form when the user picks a local file.
+ *
+ * Accepts a FormData with a single 'file' field. Returns { url } or { error }.
+ */
+export async function uploadHeroBanner(formData: FormData) {
+  try {
+    await assertAdmin();
+  } catch {
+    return { error: 'Forbidden' };
+  }
+
+  const file = formData.get('file');
+  if (!(file instanceof File)) {
+    return { error: 'Файл олдсонгүй' };
+  }
+  if (file.size === 0) {
+    return { error: 'Файл хоосон' };
+  }
+  // ~10MB cap
+  if (file.size > 10 * 1024 * 1024) {
+    return { error: 'Файл хэт том (10MB-ээс хэтэрсэн)' };
+  }
+  if (!file.type.startsWith('image/')) {
+    return { error: 'Зөвхөн зураг оруулна уу' };
+  }
+
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().slice(0, 6);
+  const name = `banner-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+  const svc = createServiceClient();
+  const { error: uploadErr } = await svc.storage
+    .from('hero-banners')
+    .upload(name, file, {
+      contentType: file.type,
+      cacheControl: '3600',
+      upsert: false,
+    });
+  if (uploadErr) return { error: uploadErr.message };
+
+  const { data: pub } = svc.storage.from('hero-banners').getPublicUrl(name);
+  return { ok: true, url: pub.publicUrl };
 }
