@@ -2,10 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  ONBOARDING_FLOWERS,
-  flowerImageUrl,
-} from '@/lib/onboarding-flowers';
+import { ONBOARDING_FLOWERS } from '@/lib/onboarding-flowers';
 import { saveSignatureMood } from '@/app/onboarding/actions';
 
 export function MoodPicker({
@@ -19,6 +16,7 @@ export function MoodPicker({
   const [selected, setSelected] = useState<string | null>(initial);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [failed, setFailed] = useState<Record<string, boolean>>({});
 
   function onContinue() {
     setError(null);
@@ -43,6 +41,7 @@ export function MoodPicker({
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
         {ONBOARDING_FLOWERS.map((f) => {
           const active = selected === f.key;
+          const imageFailed = failed[f.key];
           return (
             <button
               key={f.key}
@@ -56,15 +55,24 @@ export function MoodPicker({
               }`}
             >
               <div
-                className={`relative aspect-square ${f.tintClass} overflow-hidden`}
+                className={`relative aspect-square ${f.tintClass} overflow-hidden flex items-center justify-center`}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={flowerImageUrl(f, 400)}
-                  alt={f.label}
-                  loading="lazy"
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                />
+                {imageFailed ? (
+                  <span className="text-6xl">{f.emoji}</span>
+                ) : (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={f.image_url}
+                      alt={f.label}
+                      loading="lazy"
+                      onError={() =>
+                        setFailed((prev) => ({ ...prev, [f.key]: true }))
+                      }
+                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    />
+                  </>
+                )}
                 {active && (
                   <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-ink text-white text-xs font-bold flex items-center justify-center shadow">
                     ✓
