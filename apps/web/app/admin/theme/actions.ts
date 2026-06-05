@@ -4,12 +4,12 @@ import { revalidatePath } from 'next/cache';
 import { createServiceClient } from '@/lib/supabase/server';
 import { assertAdmin } from '@/lib/auth/admin';
 import {
-  COLOR_BY_KEY,
   DEFAULT_MENU_COLORS,
   DEFAULT_MENU_IMAGES,
   DEFAULT_MENU_SUBCATEGORIES,
   DEFAULT_HERO_BANNERS,
   IMAGE_GRADIENT_BY_KEY,
+  sanitizeColor,
   sanitizeHeroBannerConfig,
   type MenuColorMap,
   type MenuImagesMap,
@@ -32,10 +32,8 @@ export async function updateMenuColors(formData: FormData) {
 
   for (const cat of Object.keys(DEFAULT_MENU_COLORS) as CategoryKey[]) {
     const raw = formData.get(cat);
-    const key = typeof raw === 'string' ? raw : '';
-    if (key && COLOR_BY_KEY[key]) {
-      next[cat] = key;
-    }
+    // Accepts either a preset key (e.g. "blush") or a 6-digit hex (e.g. "#ff88aa")
+    next[cat] = sanitizeColor(raw);
   }
 
   const svc = createServiceClient();
@@ -86,9 +84,25 @@ function sanitizeImage(v: unknown): MegaImageConfig | null {
   const gradient = IMAGE_GRADIENT_BY_KEY[gradientRaw]
     ? gradientRaw
     : 'pink-blush';
-  if (!emoji || !label || !href) return null;
+  const image_url_raw =
+    typeof obj.image_url === 'string' ? obj.image_url.trim() : '';
+  // Only allow http(s) URLs to avoid javascript: or data: surprises
+  const image_url =
+    image_url_raw &&
+    (image_url_raw.startsWith('http://') || image_url_raw.startsWith('https://'))
+      ? image_url_raw.slice(0, 500)
+      : '';
+  if (!label || !href) return null;
   if (!href.startsWith('/')) return null;
-  return { emoji, label, href, gradient };
+  // Either an emoji OR an image must be present
+  if (!emoji && !image_url) return null;
+  return {
+    emoji: emoji || '🌸',
+    label,
+    href,
+    gradient,
+    ...(image_url ? { image_url } : {}),
+  };
 }
 
 export async function updateMenuImages(payload: MenuImagesMap) {
@@ -302,5 +316,41 @@ export async function uploadHeroBanner(formData: FormData) {
   if (uploadErr) return { error: uploadErr.message };
 
   const { data: pub } = svc.storage.from('hero-banners').getPublicUrl(name);
+  return { ok: true, url: pub.publicUrl };
+}
+
+/**
+ * Upload a mega-menu image-card photo. Same shape / validation as
+ * uploadHeroBanner but targets the mega-images bucket.
+ */
+export async function uploadMegaImage(formData: FormData) {
+  try {
+    await assertAdmin();
+  } catch {
+    return { error: 'Forbidden' };
+  }
+
+  const file = formData.get('file');
+  if (!(file instanceof File)) return { error: 'Файл олдсонгүй' };
+  if (file.size === 0) return { error: 'Файл хоосон' };
+  if (file.size > 10 * 1024 * 1024)
+    return { error: 'Файл хэт том (10MB-ээс хэтэрсэн)' };
+  if (!file.type.startsWith('image/'))
+    return { error: 'Зөвхөн зураг оруулна уу' };
+
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().slice(0, 6);
+  const name = `mega-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+  const svc = createServiceClient();
+  const { error: uploadErr } = await svc.storage
+    .from('mega-images')
+    .upload(name, file, {
+      contentType: file.type,
+      cacheControl: '3600',
+      upsert: false,
+    });
+  if (uploadErr) return { error: uploadErr.message };
+
+  const { data: pub } = svc.storage.from('mega-images').getPublicUrl(name);
   return { ok: true, url: pub.publicUrl };
 }

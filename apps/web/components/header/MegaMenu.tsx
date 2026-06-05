@@ -38,9 +38,17 @@ export function MegaMenu({ tab }: { tab: MegaTab }) {
         ? 'left-0'
         : 'left-1/2 -translate-x-1/2';
 
+  // Prefer admin-configured hex (supports arbitrary colors). Fall back to the
+  // preset Tailwind class for backward compatibility / SSR initial paint.
+  const styleBg = tab.bgHex
+    ? ({ backgroundColor: tab.bgHex } as React.CSSProperties)
+    : undefined;
+  const fallbackBgClass = tab.bgHex ? '' : (tab.bgClass ?? 'bg-white');
+
   return (
     <div
-      className={`absolute top-full ${anchorClass} mt-0 ${widthClass} max-w-[calc(100vw-32px)] z-50 rounded-xl shadow-soft opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-data-[closed=true]:opacity-0 group-data-[closed=true]:invisible group-data-[closed=true]:translate-y-2 group-data-[closed=true]:pointer-events-none transition-all duration-200 pointer-events-none group-hover:pointer-events-auto overflow-hidden ${tab.bgClass ?? 'bg-white'}`}
+      style={styleBg}
+      className={`absolute top-full ${anchorClass} mt-0 ${widthClass} max-w-[calc(100vw-32px)] z-50 rounded-xl shadow-soft opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-data-[closed=true]:opacity-0 group-data-[closed=true]:invisible group-data-[closed=true]:translate-y-2 group-data-[closed=true]:pointer-events-none transition-all duration-200 pointer-events-none group-hover:pointer-events-auto overflow-hidden ${fallbackBgClass}`}
     >
       <div className={`p-7 grid ${gridClass} gap-5`}>
         {/* Col 1 */}
@@ -109,9 +117,20 @@ function MegaImage({ img }: { img: MegaImageCard }) {
       className="bg-white rounded-xl overflow-hidden flex flex-col group/img hover:-translate-y-0.5 transition-transform min-w-0"
     >
       <div
-        className={`aspect-square ${img.bgClass} flex items-center justify-center text-4xl`}
+        className={`relative aspect-square ${img.imageUrl ? 'bg-ink/5' : img.bgClass} flex items-center justify-center text-4xl overflow-hidden`}
       >
-        {img.emoji}
+        {img.imageUrl ? (
+          // External URL — bypass next/image to skip host-allowlist config
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={img.imageUrl}
+            alt={img.label}
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform group-hover/img:scale-105"
+          />
+        ) : (
+          <span>{img.emoji}</span>
+        )}
       </div>
       <div className="px-2.5 py-2.5 text-[13px] font-medium text-ink flex items-center justify-between gap-1">
         <span className="truncate">{img.label}</span>

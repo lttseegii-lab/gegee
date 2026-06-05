@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import {
   updateMenuImages,
   resetMenuImages,
+  uploadMegaImage,
 } from '@/app/admin/theme/actions';
 import {
   IMAGE_GRADIENTS,
@@ -50,13 +51,12 @@ export function MenuImagesPicker({ initial }: { initial: MenuImagesMap }) {
   function updateCard(
     cat: CategoryKey,
     idx: number,
-    field: keyof MegaImageConfig,
-    value: string
+    patch: Partial<MegaImageConfig>
   ) {
     setSavedMsg(null);
     setImages((prev) => {
       const current = [...(prev[cat] ?? [])];
-      current[idx] = { ...current[idx], [field]: value };
+      current[idx] = { ...current[idx], ...patch };
       return { ...prev, [cat]: current };
     });
   }
@@ -131,9 +131,7 @@ export function MenuImagesPicker({ initial }: { initial: MenuImagesMap }) {
                     key={idx}
                     card={card}
                     disabled={isPending}
-                    onChange={(field, value) =>
-                      updateCard(cat, idx, field, value)
-                    }
+                    onChange={(patch) => updateCard(cat, idx, patch)}
                   />
                 ))}
               </div>
@@ -182,33 +180,112 @@ function CardEditor({
 }: {
   card: MegaImageConfig;
   disabled: boolean;
-  onChange: (field: keyof MegaImageConfig, value: string) => void;
+  onChange: (patch: Partial<MegaImageConfig>) => void;
 }) {
   const gradient = resolveGradient(card.gradient);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const hasImage = !!card.image_url;
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await uploadMegaImage(fd);
+      if (res.error) {
+        setUploadError(res.error);
+      } else if (res.url) {
+        onChange({ image_url: res.url });
+      }
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
 
   return (
     <div className="bg-offwhite rounded-card p-4 space-y-3">
-      {/* Preview */}
+      {/* Preview — show photo if uploaded, else emoji + gradient */}
       <div
-        className={`aspect-[4/3] ${gradient.bgClass} rounded-lg flex items-center justify-center text-5xl`}
+        className={`relative aspect-[4/3] ${hasImage ? 'bg-ink/5' : gradient.bgClass} rounded-lg flex items-center justify-center text-5xl overflow-hidden`}
       >
-        {card.emoji || '·'}
+        {hasImage ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={card.image_url}
+              alt={card.label || 'preview'}
+              className="w-full h-full object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => onChange({ image_url: '' })}
+              disabled={disabled || uploading}
+              aria-label="Зураг арилгах"
+              className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-ink text-sm shadow-card flex items-center justify-center"
+            >
+              ✕
+            </button>
+          </>
+        ) : (
+          <span>{card.emoji || '·'}</span>
+        )}
+      </div>
+
+      {/* URL + Upload row */}
+      <div className="space-y-2">
+        <input
+          type="url"
+          value={card.image_url ?? ''}
+          onChange={(e) => onChange({ image_url: e.target.value })}
+          disabled={disabled || uploading}
+          placeholder="https://… (зургийн URL)"
+          className="w-full bg-white border border-border rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-ink"
+        />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={onFile}
+          disabled={disabled || uploading}
+          className="hidden"
+          id={`mega-upload-${Math.random().toString(36).slice(2, 8)}`}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={disabled || uploading}
+          className="w-full text-xs px-3 py-2 rounded-lg border border-border text-center hover:border-ink transition-colors disabled:opacity-50"
+        >
+          {uploading ? 'Upload-лож байна…' : '📤 Файл сонгох'}
+        </button>
+        {uploadError && (
+          <div className="text-xs text-pinkHot bg-blush rounded px-2 py-1">
+            {uploadError}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-[60px_1fr] gap-2">
         <input
           type="text"
           value={card.emoji}
-          onChange={(e) => onChange('emoji', e.target.value)}
+          onChange={(e) => onChange({ emoji: e.target.value })}
           disabled={disabled}
           maxLength={4}
           placeholder="🌸"
+          title="Зураг ороогүй үед харагдах emoji"
           className="bg-white border border-border rounded-lg px-2 py-2 text-2xl text-center focus:outline-none focus:border-ink"
         />
         <input
           type="text"
           value={card.label}
-          onChange={(e) => onChange('label', e.target.value)}
+          onChange={(e) => onChange({ label: e.target.value })}
           disabled={disabled}
           maxLength={40}
           placeholder="Card гарчиг"
@@ -219,7 +296,7 @@ function CardEditor({
       <input
         type="text"
         value={card.href}
-        onChange={(e) => onChange('href', e.target.value)}
+        onChange={(e) => onChange({ href: e.target.value })}
         disabled={disabled}
         placeholder="/catalog/flowers"
         className="w-full bg-white border border-border rounded-lg px-3 py-2.5 text-xs font-mono focus:outline-none focus:border-ink"
@@ -227,7 +304,7 @@ function CardEditor({
 
       <div>
         <div className="text-[10px] uppercase tracking-wider text-ink/50 mb-1.5">
-          Background
+          Background (зураггүй үеийн)
         </div>
         <div className="grid grid-cols-3 gap-1.5">
           {IMAGE_GRADIENTS.map((g) => (
@@ -235,7 +312,7 @@ function CardEditor({
               key={g.key}
               type="button"
               disabled={disabled}
-              onClick={() => onChange('gradient', g.key)}
+              onClick={() => onChange({ gradient: g.key })}
               title={g.label}
               className={`h-8 rounded-md border-2 transition-all ${g.bgClass} ${
                 card.gradient === g.key

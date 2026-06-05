@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { TIERS, getTier, getNextTier } from '@/lib/rewards/tiers';
+import { getRewardsConfig } from '@/lib/rewards/getConfig';
 
 export const metadata = { title: 'Gegeen Rewards' };
 
@@ -8,19 +9,21 @@ export default async function RewardsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: rewards }, { data: history }] = await Promise.all([
-    supabase
-      .from('user_rewards')
-      .select('total_points, total_spent, tier')
-      .eq('user_id', user.id)
-      .maybeSingle(),
-    supabase
-      .from('rewards_ledger')
-      .select('id, points, reason, created_at, order_id')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(50),
-  ]);
+  const [{ data: rewards }, { data: history }, rewardsConfig] =
+    await Promise.all([
+      supabase
+        .from('user_rewards')
+        .select('total_points, total_spent, tier')
+        .eq('user_id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('rewards_ledger')
+        .select('id, points, reason, created_at, order_id')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50),
+      getRewardsConfig(),
+    ]);
 
   const totalPoints = rewards?.total_points ?? 0;
   const totalSpent = rewards?.total_spent ?? 0;
@@ -44,7 +47,11 @@ export default async function RewardsPage() {
       </div>
       <h1 className="font-serif text-4xl mb-2">Gegeen Rewards</h1>
       <p className="text-sm text-ink/60 mb-8">
-        1 оноо / 1000₮ зарцуулсанд. Tier-ээс хамаарч multiplier ажиллана.
+        Захиалгын дүнгийн{' '}
+        <strong className="text-ink">
+          {rewardsConfig.earnRatePercent}%
+        </strong>{' '}
+        нь оноо болж нэмэгдэнэ. Tier-ээс хамаарч давуу талууд нэмэгдэнэ.
       </p>
 
       {/* Current tier hero */}

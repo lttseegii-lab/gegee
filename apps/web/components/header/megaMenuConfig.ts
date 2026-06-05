@@ -12,9 +12,11 @@ export interface MegaLinkItem {
 export interface MegaImageCard {
   label: string;
   href: string;
-  /** Tailwind background color class for the placeholder (until we have real images) */
+  /** Tailwind background color class — used when no photo is set */
   bgClass: string;
   emoji?: string;
+  /** Optional photo URL — takes precedence over emoji + bgClass when present */
+  imageUrl?: string;
 }
 
 export interface MegaTab {
@@ -25,10 +27,12 @@ export interface MegaTab {
   badge?: 'new' | 'top';
   /** If false, no mega menu — just a plain link */
   hasMega: boolean;
-  /** Tailwind class for mega background (e.g., "bg-blush") */
+  /** Tailwind class for mega background (e.g., "bg-blush"). Used as fallback. */
   bgClass?: string;
-  /** Tailwind class for tab on hover — must match bgClass color */
+  /** Tailwind class for tab on hover — must match bgClass color. Used as fallback. */
   tabHoverClass?: string;
+  /** Resolved hex color (preferred over bgClass when present — supports arbitrary admin colors) */
+  bgHex?: string;
   col1Heading?: string;
   col1?: MegaLinkItem[];
   col2?: MegaLinkItem[];

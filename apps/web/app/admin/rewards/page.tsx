@@ -82,8 +82,8 @@ export default async function AdminRewardsPage({
         </p>
       </header>
 
-      {/* Signup bonus editor */}
-      <SignupBonusEditor initial={rewardsConfig.signupBonus} />
+      {/* Signup bonus + earn rate editor */}
+      <SignupBonusEditor initial={rewardsConfig} />
 
       {/* Stats summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">

@@ -83,19 +83,31 @@ export async function adjustUserPoints(userId: string, formData: FormData) {
 // Signup bonus configuration
 // ============================================================
 
-export async function updateSignupBonus(formData: FormData) {
+function asFloat(v: FormDataEntryValue | null): number | null {
+  const s = typeof v === 'string' ? v.trim() : '';
+  if (!s) return null;
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+export async function updateRewardsConfig(formData: FormData) {
   try {
     await assertAdmin();
   } catch {
     return { error: 'Forbidden' };
   }
 
-  const points = asInt(formData.get('signupBonus'));
-  if (points == null) {
-    return { error: 'Оноо тоо байх ёстой' };
+  const signupBonus = asInt(formData.get('signupBonus'));
+  const earnRatePercent = asFloat(formData.get('earnRatePercent'));
+
+  if (signupBonus == null) {
+    return { error: 'Бэлгийн оноо тоо байх ёстой' };
+  }
+  if (earnRatePercent == null) {
+    return { error: 'Хувь тоо байх ёстой' };
   }
 
-  const cleaned = sanitizeRewardsConfig({ signupBonus: points });
+  const cleaned = sanitizeRewardsConfig({ signupBonus, earnRatePercent });
 
   const svc = createServiceClient();
   const { error } = await svc.from('site_settings').upsert(
@@ -108,10 +120,15 @@ export async function updateSignupBonus(formData: FormData) {
   if (error) return { error: error.message };
 
   revalidatePath('/admin/rewards');
-  return { ok: true, signupBonus: cleaned.signupBonus };
+  revalidatePath('/account/rewards');
+  return {
+    ok: true,
+    signupBonus: cleaned.signupBonus,
+    earnRatePercent: cleaned.earnRatePercent,
+  };
 }
 
-export async function resetSignupBonus() {
+export async function resetRewardsConfig() {
   try {
     await assertAdmin();
   } catch {
@@ -129,7 +146,12 @@ export async function resetSignupBonus() {
   if (error) return { error: error.message };
 
   revalidatePath('/admin/rewards');
-  return { ok: true, signupBonus: DEFAULT_REWARDS_CONFIG.signupBonus };
+  revalidatePath('/account/rewards');
+  return {
+    ok: true,
+    signupBonus: DEFAULT_REWARDS_CONFIG.signupBonus,
+    earnRatePercent: DEFAULT_REWARDS_CONFIG.earnRatePercent,
+  };
 }
 
 export async function deleteLedgerEntry(userId: string, entryId: number) {

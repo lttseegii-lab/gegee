@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react';
 import { updateMenuColors, resetMenuColors } from '@/app/admin/theme/actions';
 import {
   COLOR_PALETTE,
+  colorToHex,
+  isHexColor,
   type MenuColorMap,
   type CategoryKey,
 } from '@/lib/theme/palette';
@@ -16,22 +18,23 @@ const CATEGORY_LABELS: Record<CategoryKey, { icon: string; label: string }> = {
   subs: { icon: '📦', label: 'Захиалгат' },
 };
 
+const HEX_RE = /^#[0-9a-f]{6}$/i;
+
 export function MenuColorPicker({ initial }: { initial: MenuColorMap }) {
   const [colors, setColors] = useState<MenuColorMap>(initial);
   const [error, setError] = useState<string | null>(null);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function pickColor(cat: CategoryKey, key: string) {
-    setColors((prev) => ({ ...prev, [cat]: key }));
+  function pickColor(cat: CategoryKey, value: string) {
+    setColors((prev) => ({ ...prev, [cat]: value }));
     setSavedMsg(null);
   }
 
   function onSubmit(formData: FormData) {
     setError(null);
     setSavedMsg(null);
-    // Override formData with our state (since we use buttons not inputs)
-    Object.entries(colors).forEach(([cat, key]) => formData.set(cat, key));
+    Object.entries(colors).forEach(([cat, value]) => formData.set(cat, value));
     startTransition(async () => {
       const res = await updateMenuColors(formData);
       if (res.error) setError(res.error);
@@ -60,31 +63,83 @@ export function MenuColorPicker({ initial }: { initial: MenuColorMap }) {
   }
 
   return (
-    <form action={onSubmit} className="space-y-8">
+    <form action={onSubmit} className="space-y-6">
       {(Object.keys(CATEGORY_LABELS) as CategoryKey[]).map((cat) => {
         const meta = CATEGORY_LABELS[cat];
         const selected = colors[cat];
+        const selectedHex = colorToHex(selected);
+        const isPresetSelected =
+          !isHexColor(selected) &&
+          COLOR_PALETTE.some((c) => c.key === selected);
+
         return (
           <div
             key={cat}
             className="bg-white border border-border rounded-card p-6"
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{meta.icon}</span>
                 <h3 className="font-medium text-lg">{meta.label}</h3>
               </div>
-              {/* Preview pill */}
-              <span
-                className="text-[11px] uppercase tracking-wider px-3 py-1 rounded-full"
-                style={{
-                  backgroundColor:
-                    COLOR_PALETTE.find((c) => c.key === selected)?.hex ??
-                    '#f5ebee',
-                }}
+
+              {/* Live preview chip */}
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-10 h-10 rounded-lg border border-border shadow-card"
+                  style={{ backgroundColor: selectedHex }}
+                  aria-label="Сонгосон өнгө"
+                />
+                <span className="text-[11px] uppercase tracking-wider text-ink/50 font-mono">
+                  {selectedHex}
+                </span>
+              </div>
+            </div>
+
+            {/* Custom color row — native color picker + hex input */}
+            <div className="flex items-center gap-3 mb-4 bg-offwhite rounded-card px-3 py-2.5">
+              <label
+                htmlFor={`color-${cat}`}
+                className="text-xs uppercase tracking-wider text-ink/50"
               >
-                {selected}
-              </span>
+                Дурын өнгө
+              </label>
+              <input
+                id={`color-${cat}`}
+                type="color"
+                value={selectedHex}
+                onChange={(e) => pickColor(cat, e.target.value)}
+                disabled={isPending}
+                className="h-9 w-12 rounded-md border border-border cursor-pointer bg-transparent"
+              />
+              <input
+                type="text"
+                value={isHexColor(selected) ? selected : selectedHex}
+                onChange={(e) => {
+                  const v = e.target.value.trim();
+                  if (HEX_RE.test(v)) pickColor(cat, v.toLowerCase());
+                  else {
+                    // Allow partial typing — only commit when valid hex.
+                    // But if cleared, revert to current saved value.
+                    setColors((prev) => ({ ...prev, [cat]: prev[cat] }));
+                  }
+                }}
+                disabled={isPending}
+                placeholder="#fbe6ee"
+                maxLength={7}
+                className="flex-1 sm:flex-none sm:w-32 bg-white border border-border rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-ink"
+              />
+              {isPresetSelected && (
+                <span className="text-[10px] uppercase tracking-wider text-ink/40">
+                  preset:{' '}
+                  {COLOR_PALETTE.find((c) => c.key === selected)?.label}
+                </span>
+              )}
+            </div>
+
+            {/* Preset swatches — quick picks */}
+            <div className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
+              Эсвэл preset
             </div>
             <div className="grid grid-cols-7 gap-2">
               {COLOR_PALETTE.map((c) => {
@@ -112,7 +167,7 @@ export function MenuColorPicker({ initial }: { initial: MenuColorMap }) {
                 );
               })}
             </div>
-            <div className="mt-3 grid grid-cols-7 gap-2">
+            <div className="mt-2 grid grid-cols-7 gap-2">
               {COLOR_PALETTE.map((c) => (
                 <div
                   key={c.key}

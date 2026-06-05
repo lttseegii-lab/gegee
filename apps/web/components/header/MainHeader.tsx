@@ -18,6 +18,7 @@ import {
 import {
   resolveColor,
   resolveGradient,
+  colorToHex,
   type MenuImagesMap,
   type MenuColorMap,
   type MenuSubcategoriesMap,
@@ -37,12 +38,15 @@ function applyTheme(
     const cat = tabLabelToCategoryKey(tab.label);
     if (!cat) return tab;
 
-    const color = resolveColor(colors[cat]);
+    const stored = colors[cat];
+    const color = resolveColor(stored);
+    const bgHex = colorToHex(stored);
     const dbImages: MegaImageCard[] = (images[cat] ?? []).map((img) => ({
       label: img.label,
       href: img.href,
       bgClass: resolveGradient(img.gradient).bgClass,
       emoji: img.emoji,
+      imageUrl: img.image_url,
     }));
 
     // Split subcategories into col1 / col2 (default col1 if column missing)
@@ -66,6 +70,7 @@ function applyTheme(
       ...tab,
       bgClass: color.bgClass,
       tabHoverClass: color.hoverClass,
+      bgHex,
       images: dbImages,
       col1,
       col2,

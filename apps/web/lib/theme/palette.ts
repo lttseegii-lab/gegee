@@ -51,6 +51,41 @@ export function resolveColor(key: string | undefined): ColorOption {
 }
 
 // ============================================================
+// Hex-anywhere support — admin may pick any color, not just the
+// 7 preset keys. Stored values are normalized via sanitizeColor().
+// ============================================================
+
+const HEX_RE = /^#[0-9a-f]{6}$/i;
+
+export function isHexColor(s: unknown): s is string {
+  return typeof s === 'string' && HEX_RE.test(s.trim());
+}
+
+/**
+ * Normalize a stored color value. Returns `#rrggbb` lowercase, or the preset
+ * key untouched if it matches one of the COLOR_PALETTE entries. Anything
+ * else falls back to the default `blush` preset.
+ */
+export function sanitizeColor(raw: unknown): string {
+  if (typeof raw !== 'string') return DEFAULT_MENU_COLORS.flowers;
+  const v = raw.trim();
+  if (HEX_RE.test(v)) return v.toLowerCase();
+  if (COLOR_BY_KEY[v]) return v;
+  return DEFAULT_MENU_COLORS.flowers;
+}
+
+/**
+ * Resolve any stored color value (preset key OR hex string) to its hex.
+ * Used by header / mega menu rendering — we always render with inline
+ * `style.backgroundColor` so arbitrary hex values work alongside presets.
+ */
+export function colorToHex(value: string | undefined): string {
+  if (!value) return COLOR_BY_KEY.blush.hex;
+  if (HEX_RE.test(value)) return value.toLowerCase();
+  return COLOR_BY_KEY[value]?.hex ?? COLOR_BY_KEY.blush.hex;
+}
+
+// ============================================================
 // Mega menu image cards — admin-configurable preview cards on
 // the right side of the dropdown. Each category supports 0-2 cards.
 // ============================================================
@@ -87,8 +122,10 @@ export interface MegaImageConfig {
   emoji: string;
   label: string;
   href: string;
-  /** Gradient key from IMAGE_GRADIENTS */
+  /** Gradient key from IMAGE_GRADIENTS (used as fallback / when image_url is empty) */
   gradient: string;
+  /** Optional photo URL — if set, takes precedence over emoji + gradient */
+  image_url?: string;
 }
 
 export type MenuImagesMap = Record<CategoryKey, MegaImageConfig[]>;
