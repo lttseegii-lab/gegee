@@ -7,6 +7,7 @@ import {
   type OnboardingStep,
 } from '@/components/onboarding/OnboardingProgress';
 import { MoodPicker } from '@/components/onboarding/MoodPicker';
+import { getOnboardingFlowers } from '@/lib/getOnboardingFlowers';
 import { MemoryDateAdder } from '@/components/account/MemoryDateAdder';
 import { FinishButton, DoneButton } from '@/components/onboarding/FinishButton';
 import { FlowerSalute } from '@/components/onboarding/FlowerSalute';
@@ -52,13 +53,23 @@ export default async function OnboardingPage({
 
   const firstName = (profile?.name ?? user.email ?? '').split(' ')[0];
 
+  // Admin-overridable flower list — falls back to static defaults
+  const flowers =
+    step === 'mood' || step === 'done'
+      ? await getOnboardingFlowers()
+      : [];
+
   return (
     <div>
       <OnboardingProgress current={step} />
 
       {step === 'welcome' && <WelcomeStep name={firstName} next={next} />}
       {step === 'mood' && (
-        <MoodStep initial={profile?.signature_mood ?? null} next={next} />
+        <MoodStep
+          initial={profile?.signature_mood ?? null}
+          next={next}
+          flowers={flowers}
+        />
       )}
       {step === 'memory' && <MemoryStep userId={user.id} next={next} />}
       {step === 'done' && (
@@ -67,6 +78,7 @@ export default async function OnboardingPage({
           mood={profile?.signature_mood ?? null}
           next={next}
           bonusPoints={bonusPoints}
+          flowers={flowers}
         />
       )}
     </div>
@@ -105,9 +117,11 @@ function WelcomeStep({ name, next }: { name: string; next: string }) {
 function MoodStep({
   initial,
   next,
+  flowers,
 }: {
   initial: string | null;
   next: string;
+  flowers: import('@/lib/onboarding-flowers').OnboardingFlower[];
 }) {
   return (
     <section>
@@ -116,11 +130,11 @@ function MoodStep({
           Алхам 1 / 2
         </div>
         <h2 className="font-serif italic text-3xl sm:text-4xl">
-          Та өөрийгөө цэцэгтэй зүйрлэх үү?
+          Та аль цэцгэнд дуртай вэ?
         </h2>
       </header>
 
-      <MoodPicker initial={initial} next={next} />
+      <MoodPicker initial={initial} next={next} flowers={flowers} />
     </section>
   );
 }
@@ -222,19 +236,35 @@ function DoneStep({
   mood,
   next,
   bonusPoints,
+  flowers,
 }: {
   name: string;
   mood: string | null;
   next: string;
   bonusPoints: number;
+  flowers: import('@/lib/onboarding-flowers').OnboardingFlower[];
 }) {
-  const m = mood ? MOODS_BY_KEY[mood] : null;
+  // Prefer flower lookup (new framing); fall back to old MOODS for legacy
+  // signature_mood values stored before the rebrand.
+  const flower = mood ? flowers.find((f) => f.key === mood) ?? null : null;
+  const m = !flower && mood ? MOODS_BY_KEY[mood] : null;
   const showCelebration = bonusPoints > 0;
   return (
     <section className="text-center max-w-xl mx-auto relative">
       {showCelebration && <FlowerSalute />}
 
-      <div className="text-6xl mb-6">{m?.emoji ?? '✨'}</div>
+      {flower ? (
+        <div className="mx-auto mb-6 w-24 h-24 rounded-full overflow-hidden border border-border shadow-card">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={flower.image_url}
+            alt={flower.label}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ) : (
+        <div className="text-6xl mb-6">{m?.emoji ?? '✨'}</div>
+      )}
       <div className="text-[11px] uppercase tracking-[0.2em] text-pinkHot mb-3">
         Бэлэн
       </div>
@@ -256,7 +286,12 @@ function DoneStep({
         </div>
       )}
 
-      {m ? (
+      {flower ? (
+        <p className="text-ink/70 mb-10 leading-relaxed">
+          Та <strong>{flower.label}</strong>-д дуртай юм байна. Бид танай
+          гэртээ түүнтэй төстэй цэцэг онцлоход бэлэн.
+        </p>
+      ) : m ? (
         <p className="text-ink/70 mb-10 leading-relaxed">
           Та <strong>{m.label}</strong> {m.emoji}-ийг сонголоо. Бид танай{' '}
           mood-д тохирох цэцгийг үргэлж онцлоход бэлэн.

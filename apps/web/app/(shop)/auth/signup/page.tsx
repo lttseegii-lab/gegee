@@ -24,7 +24,7 @@ export default function SignupPage() {
     <main className="max-w-md mx-auto px-6 py-20">
       <h1 className="font-serif italic text-4xl mb-2 text-center">Бүртгүүлэх</h1>
       <p className="text-ink/60 text-sm text-center mb-10">
-        Gegeen Memory Garden, rewards, AI concierge ашиглахын тулд
+        Мартаж болохгүй өдрүүд, урамшууллын оноо, AI concierge ашиглахын тулд
       </p>
 
       {ANY_OAUTH_ENABLED && (

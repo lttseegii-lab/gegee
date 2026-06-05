@@ -189,7 +189,7 @@ export default async function CustomerDetailPage({
       {memoryDates && memoryDates.length > 0 && (
         <section className="mb-10">
           <h2 className="font-medium text-lg mb-4">
-            Memory Garden ({memoryDates.length})
+            Мартаж болохгүй өдрүүд ({memoryDates.length})
           </h2>
           <ul className="grid sm:grid-cols-2 gap-3">
             {memoryDates.map((m) => (

@@ -19,6 +19,10 @@ import {
   type HeroBannerConfig,
   type CategoryKey,
 } from '@/lib/theme/palette';
+import {
+  sanitizeOnboardingFlowersOverride,
+  type OnboardingFlowersOverride,
+} from '@/lib/onboarding-flowers';
 import type { Json } from '@/types/database';
 
 export async function updateMenuColors(formData: FormData) {
@@ -340,6 +344,94 @@ export async function uploadMegaImage(formData: FormData) {
 
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().slice(0, 6);
   const name = `mega-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+  const svc = createServiceClient();
+  const { error: uploadErr } = await svc.storage
+    .from('mega-images')
+    .upload(name, file, {
+      contentType: file.type,
+      cacheControl: '3600',
+      upsert: false,
+    });
+  if (uploadErr) return { error: uploadErr.message };
+
+  const { data: pub } = svc.storage.from('mega-images').getPublicUrl(name);
+  return { ok: true, url: pub.publicUrl };
+}
+
+// ============================================================
+// Onboarding flowers (signup flower-picker images)
+// ============================================================
+
+export async function updateOnboardingFlowers(
+  payload: OnboardingFlowersOverride
+) {
+  try {
+    await assertAdmin();
+  } catch {
+    return { error: 'Forbidden' };
+  }
+
+  const cleaned = sanitizeOnboardingFlowersOverride(payload);
+
+  const svc = createServiceClient();
+  const { error } = await svc.from('site_settings').upsert(
+    {
+      key: 'onboarding_flowers',
+      value: cleaned as unknown as Json,
+    },
+    { onConflict: 'key' }
+  );
+  if (error) return { error: error.message };
+
+  revalidatePath('/', 'layout');
+  revalidatePath('/onboarding');
+  revalidatePath('/account/profile', 'layout');
+  return { ok: true, flowers: cleaned };
+}
+
+export async function resetOnboardingFlowers() {
+  try {
+    await assertAdmin();
+  } catch {
+    return { error: 'Forbidden' };
+  }
+
+  const svc = createServiceClient();
+  // Reset = delete the row so the reader falls back to static defaults
+  const { error } = await svc
+    .from('site_settings')
+    .delete()
+    .eq('key', 'onboarding_flowers');
+  if (error) return { error: error.message };
+
+  revalidatePath('/', 'layout');
+  revalidatePath('/onboarding');
+  revalidatePath('/account/profile', 'layout');
+  return { ok: true };
+}
+
+/**
+ * Upload a single onboarding-flower photo to mega-images bucket (reused —
+ * same admin-write policy already in place). Returns the public URL.
+ */
+export async function uploadOnboardingFlower(formData: FormData) {
+  try {
+    await assertAdmin();
+  } catch {
+    return { error: 'Forbidden' };
+  }
+
+  const file = formData.get('file');
+  if (!(file instanceof File)) return { error: 'Файл олдсонгүй' };
+  if (file.size === 0) return { error: 'Файл хоосон' };
+  if (file.size > 10 * 1024 * 1024)
+    return { error: 'Файл хэт том (10MB-ээс хэтэрсэн)' };
+  if (!file.type.startsWith('image/'))
+    return { error: 'Зөвхөн зураг оруулна уу' };
+
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().slice(0, 6);
+  const name = `flower-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
   const svc = createServiceClient();
   const { error: uploadErr } = await svc.storage

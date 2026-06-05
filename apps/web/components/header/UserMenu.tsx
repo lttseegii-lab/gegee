@@ -1,6 +1,7 @@
 // Server Component — reads auth state from cookies via Supabase server client
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { getOnboardingFlowerByKey } from '@/lib/getOnboardingFlowers';
 
 export async function UserMenu() {
   const supabase = createClient();
@@ -33,11 +34,12 @@ export async function UserMenu() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('name, avatar_url')
+    .select('name, avatar_url, signature_mood')
     .eq('id', user.id)
     .single();
 
   const initial = (profile?.name ?? user.email ?? '?')[0]?.toUpperCase();
+  const flower = await getOnboardingFlowerByKey(profile?.signature_mood);
 
   return (
     <Link
@@ -46,9 +48,20 @@ export async function UserMenu() {
       aria-label="Хувийн мэдээлэл"
       title={profile?.name ?? user.email ?? 'Profile'}
     >
-      <span className="w-7 h-7 rounded-full bg-lilac flex items-center justify-center text-[12px] font-semibold">
-        {initial}
-      </span>
+      {flower ? (
+        <span className="w-7 h-7 rounded-full overflow-hidden border border-border bg-ink/5 block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={flower.image_url}
+            alt={flower.label}
+            className="w-full h-full object-cover"
+          />
+        </span>
+      ) : (
+        <span className="w-7 h-7 rounded-full bg-lilac flex items-center justify-center text-[12px] font-semibold">
+          {initial}
+        </span>
+      )}
     </Link>
   );
 }

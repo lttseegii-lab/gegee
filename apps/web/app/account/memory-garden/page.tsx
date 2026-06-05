@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { MemoryDateCard, type MemoryOrder } from '@/components/account/MemoryDateCard';
 import { MemoryDateAdder } from '@/components/account/MemoryDateAdder';
 
-export const metadata = { title: 'Memory Garden' };
+export const metadata = { title: 'Мартаж болохгүй өдрүүд' };
 
 export default async function MemoryGardenPage() {
   const supabase = createClient();
@@ -63,7 +63,7 @@ export default async function MemoryGardenPage() {
       <div className="text-[11px] uppercase tracking-[0.2em] text-pinkHot mb-3">
         Чухал огноо
       </div>
-      <h1 className="font-serif text-4xl mb-2">Memory Garden ✻</h1>
+      <h1 className="font-serif text-4xl mb-2">Мартаж болохгүй өдрүүд ✻</h1>
       <p className="text-sm text-ink/60 mb-8 max-w-prose">
         Хайртай хүмүүсийнхээ чухал огноог хадгална уу. Ойртохоос 7 хоног + 1
         хоног өмнө сануулга илгээж, тухайн event-д хүргүүлсэн цэцгийн түүхийг

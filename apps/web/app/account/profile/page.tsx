@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { AddressList } from '@/components/account/AddressList';
 import { ProfileInfoCard } from '@/components/account/ProfileInfoCard';
 
-export const metadata = { title: 'Миний профайл' };
+export const metadata = { title: 'Профайл' };
 
 const PROVIDER_LABEL: Record<string, string> = {
   email: 'Имэйл',
@@ -75,7 +75,7 @@ export default async function ProfilePage() {
       <div className="text-[11px] uppercase tracking-[0.2em] text-pinkHot mb-3">
         Хэрэглэгчийн мэдээлэл
       </div>
-      <h1 className="font-serif text-4xl mb-2">Миний профайл</h1>
+      <h1 className="font-serif text-4xl mb-2">Профайл</h1>
       <p className="text-sm text-ink/60 mb-8">
         Хувийн мэдээлэл, статистик, бүртгэлийн тохиргоо
       </p>
@@ -87,7 +87,7 @@ export default async function ProfilePage() {
         <StatCard value={String(deliveredCount ?? 0)} label="Хүлээн авсан баглаа" />
         <StatCard
           value={totalPoints.toLocaleString()}
-          label="Rewards оноо"
+          label="Урамшууллын оноо"
           accent
         />
       </div>

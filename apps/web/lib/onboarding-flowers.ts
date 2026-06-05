@@ -118,3 +118,85 @@ export const ONBOARDING_FLOWERS: OnboardingFlower[] = [
 
 export const ONBOARDING_FLOWERS_BY_KEY: Record<string, OnboardingFlower> =
   Object.fromEntries(ONBOARDING_FLOWERS.map((f) => [f.key, f]));
+
+export const ONBOARDING_FLOWER_KEYS = ONBOARDING_FLOWERS.map((f) => f.key);
+
+/**
+ * Schema for an admin override of a single flower. Only the editable
+ * fields (image, label, description) are stored — `key`, `emoji`,
+ * `tintClass` always come from the static defaults so the avatars and
+ * tint styles stay consistent.
+ */
+export interface OnboardingFlowerOverride {
+  key: string;
+  image_url?: string;
+  label?: string;
+  description?: string;
+}
+
+export type OnboardingFlowersOverride = OnboardingFlowerOverride[];
+
+/**
+ * Merge an admin override (from site_settings.onboarding_flowers) on top of
+ * the static defaults. Keys are matched 1:1 — anything missing falls back to
+ * the default value. Used by the server reader so the rest of the codebase
+ * always sees a complete OnboardingFlower[].
+ */
+export function mergeFlowerOverrides(
+  defaults: OnboardingFlower[],
+  override: OnboardingFlowersOverride | null | undefined
+): OnboardingFlower[] {
+  if (!override || override.length === 0) return defaults;
+  const map = new Map(override.map((o) => [o.key, o] as const));
+  return defaults.map((f) => {
+    const o = map.get(f.key);
+    if (!o) return f;
+    return {
+      ...f,
+      image_url:
+        typeof o.image_url === 'string' && o.image_url.trim()
+          ? o.image_url.trim()
+          : f.image_url,
+      label:
+        typeof o.label === 'string' && o.label.trim()
+          ? o.label.trim()
+          : f.label,
+      description:
+        typeof o.description === 'string' && o.description.trim()
+          ? o.description.trim()
+          : f.description,
+    };
+  });
+}
+
+export function sanitizeOnboardingFlowersOverride(
+  raw: unknown
+): OnboardingFlowersOverride {
+  if (!Array.isArray(raw)) return [];
+  const validKeys = new Set(ONBOARDING_FLOWER_KEYS);
+  const out: OnboardingFlowersOverride = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const obj = item as Record<string, unknown>;
+    const key = typeof obj.key === 'string' ? obj.key.trim() : '';
+    if (!validKeys.has(key)) continue;
+    const image_url_raw =
+      typeof obj.image_url === 'string' ? obj.image_url.trim() : '';
+    const image_url =
+      image_url_raw &&
+      (image_url_raw.startsWith('http://') ||
+        image_url_raw.startsWith('https://'))
+        ? image_url_raw.slice(0, 500)
+        : undefined;
+    const label =
+      typeof obj.label === 'string'
+        ? obj.label.trim().slice(0, 40) || undefined
+        : undefined;
+    const description =
+      typeof obj.description === 'string'
+        ? obj.description.trim().slice(0, 200) || undefined
+        : undefined;
+    out.push({ key, image_url, label, description });
+  }
+  return out;
+}

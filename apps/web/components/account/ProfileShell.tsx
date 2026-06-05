@@ -13,19 +13,24 @@ type NavItem = {
 };
 
 const ITEMS: NavItem[] = [
-  { href: '/account/profile', label: 'Миний профайл', icon: '👤' },
-  { href: '/account/memory-garden', label: 'Memory Garden', icon: '🌷' },
-  { href: '/account/rewards', label: 'Rewards оноо', icon: '🎁' },
+  { href: '/account/profile', label: 'Профайл', icon: '👤' },
+  { href: '/account/memory-garden', label: 'Мартаж болохгүй өдрүүд', icon: '🌷' },
+  { href: '/account/rewards', label: 'Урамшууллын оноо', icon: '🎁' },
   { href: '/account/orders', label: 'Захиалга', icon: '🔁' },
 ];
 
 export function ProfileShell({
   name,
   email,
+  flowerImageUrl,
+  flowerLabel,
   children,
 }: {
   name: string;
   email: string;
+  /** Resolved (admin-overridden) profile flower URL — null if not set */
+  flowerImageUrl?: string | null;
+  flowerLabel?: string | null;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -34,8 +39,8 @@ export function ProfileShell({
   const initial = (name || email || '?').charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-ink/5 py-6 px-4 sm:px-6">
-      <div className="max-w-container mx-auto bg-white rounded-[24px] shadow-soft overflow-hidden relative">
+    <div className="h-screen bg-ink/5 p-4 sm:p-6 flex">
+      <div className="max-w-container w-full mx-auto bg-white rounded-[24px] shadow-soft overflow-hidden relative flex flex-col flex-1">
         <button
           type="button"
           onClick={() => router.push('/')}
@@ -57,13 +62,27 @@ export function ProfileShell({
           </svg>
         </button>
 
-        <div className="grid lg:grid-cols-[280px_1fr] min-h-[600px]">
-          <aside className="border-r border-border flex flex-col">
-            <div className="p-6 border-b border-border">
+        <div className="grid lg:grid-cols-[280px_1fr] flex-1 min-h-0">
+          <aside className="border-r border-border flex flex-col min-h-0">
+            <div className="p-6 border-b border-border flex-shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-peach to-pinkHot flex items-center justify-center text-white font-semibold text-lg shrink-0">
-                  {initial}
-                </div>
+                {flowerImageUrl ? (
+                  <div
+                    className="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-border bg-ink/5"
+                    title={flowerLabel ?? undefined}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={flowerImageUrl}
+                      alt={flowerLabel ?? 'avatar'}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-peach to-pinkHot flex items-center justify-center text-white font-semibold text-lg shrink-0">
+                    {initial}
+                  </div>
+                )}
                 <div className="min-w-0">
                   <div className="font-medium truncate">{name}</div>
                   <div className="text-xs text-ink/50 truncate">{email}</div>
@@ -71,7 +90,7 @@ export function ProfileShell({
               </div>
             </div>
 
-            <nav className="flex-1 p-3">
+            <nav className="flex-1 p-3 overflow-y-auto min-h-0">
               {ITEMS.map((it) => {
                 const isActive =
                   pathname === it.href ||
@@ -96,7 +115,10 @@ export function ProfileShell({
               })}
             </nav>
 
-            <form action={signOut} className="p-4 border-t border-border">
+            <form
+              action={signOut}
+              className="p-4 border-t border-border flex-shrink-0 bg-white"
+            >
               <button
                 type="submit"
                 className="flex items-center gap-2 text-sm text-pinkHot hover:text-pinkHot/80 transition-colors"
@@ -120,7 +142,7 @@ export function ProfileShell({
             </form>
           </aside>
 
-          <div className="p-8 sm:p-10 overflow-y-auto">{children}</div>
+          <div className="p-8 sm:p-10 overflow-y-auto min-h-0">{children}</div>
         </div>
       </div>
     </div>

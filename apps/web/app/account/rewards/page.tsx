@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { TIERS, getTier, getNextTier } from '@/lib/rewards/tiers';
 import { getRewardsConfig } from '@/lib/rewards/getConfig';
 
-export const metadata = { title: 'Gegeen Rewards' };
+export const metadata = { title: 'Урамшууллын оноо' };
 
 export default async function RewardsPage() {
   const supabase = createClient();
@@ -45,7 +45,7 @@ export default async function RewardsPage() {
       <div className="text-[11px] uppercase tracking-[0.2em] text-pinkHot mb-3">
         Урамшуулал
       </div>
-      <h1 className="font-serif text-4xl mb-2">Gegeen Rewards</h1>
+      <h1 className="font-serif text-4xl mb-2">Урамшууллын оноо</h1>
       <p className="text-sm text-ink/60 mb-8">
         Захиалгын дүнгийн{' '}
         <strong className="text-ink">

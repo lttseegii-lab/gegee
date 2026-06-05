@@ -5,20 +5,24 @@ import {
   getMenuSubcategories,
   getHeroBanners,
 } from '@/lib/theme/getTheme';
+import { getOnboardingFlowers } from '@/lib/getOnboardingFlowers';
 import { MenuColorPicker } from '@/components/admin/MenuColorPicker';
 import { MenuImagesPicker } from '@/components/admin/MenuImagesPicker';
 import { MenuSubcategoriesPicker } from '@/components/admin/MenuSubcategoriesPicker';
 import { HeroBannersPicker } from '@/components/admin/HeroBannersPicker';
+import { OnboardingFlowersPicker } from '@/components/admin/OnboardingFlowersPicker';
 
 export const metadata = { title: 'Theme' };
 
 export default async function AdminThemePage() {
-  const [colors, images, subcategories, heroBanners] = await Promise.all([
-    getMenuColors(),
-    getMenuImages(),
-    getMenuSubcategories(),
-    getHeroBanners(),
-  ]);
+  const [colors, images, subcategories, heroBanners, onboardingFlowers] =
+    await Promise.all([
+      getMenuColors(),
+      getMenuImages(),
+      getMenuSubcategories(),
+      getHeroBanners(),
+      getOnboardingFlowers(),
+    ]);
 
   return (
     <div className="p-8 max-w-5xl">
@@ -85,6 +89,19 @@ export default async function AdminThemePage() {
           </p>
         </header>
         <HeroBannersPicker initial={heroBanners} />
+      </section>
+
+      {/* Section: Onboarding flowers */}
+      <section className="mb-12">
+        <header className="mb-5">
+          <h2 className="font-serif italic text-2xl">Бүртгэлийн цэцгүүд</h2>
+          <p className="text-sm text-ink/60 mt-1 max-w-prose">
+            Шинэ хэрэглэгч бүртгэл хийх үед сонгох 10 цэцэг. Зураг, нэр,
+            тайлбарыг өөрчилж болно. URL paste эсвэл файл upload хийж crop
+            хийнэ. Зураг профайл аватар болж ч харагдана.
+          </p>
+        </header>
+        <OnboardingFlowersPicker initial={onboardingFlowers} />
       </section>
 
       <div className="mt-10 p-5 bg-white border border-border rounded-card text-sm text-ink/70">

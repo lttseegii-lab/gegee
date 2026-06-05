@@ -82,7 +82,7 @@ export default async function HomePage() {
         <div className="max-w-container mx-auto px-6 py-16 grid lg:grid-cols-[1fr_auto] gap-8 items-center">
           <div className="max-w-xl">
             <p className="text-[13px] uppercase tracking-[0.2em] text-ink/50 mb-2">
-              ✻ Memory Garden
+              ✻ Мартаж болохгүй өдрүүд
             </p>
             <h2 className="font-serif italic text-3xl mb-3">
               Хайртай хүмүүсийнхээ <em>чухал огноог</em> мартахгүй

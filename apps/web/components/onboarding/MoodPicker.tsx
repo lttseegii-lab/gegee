@@ -2,15 +2,21 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { ONBOARDING_FLOWERS } from '@/lib/onboarding-flowers';
+import {
+  ONBOARDING_FLOWERS,
+  type OnboardingFlower,
+} from '@/lib/onboarding-flowers';
 import { saveSignatureMood } from '@/app/onboarding/actions';
 
 export function MoodPicker({
   initial,
   next,
+  flowers = ONBOARDING_FLOWERS,
 }: {
   initial: string | null;
   next: string;
+  /** Optional admin-overridden list. Falls back to static defaults. */
+  flowers?: OnboardingFlower[];
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(initial);
@@ -39,7 +45,7 @@ export function MoodPicker({
   return (
     <div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
-        {ONBOARDING_FLOWERS.map((f) => {
+        {flowers.map((f) => {
           const active = selected === f.key;
           const imageFailed = failed[f.key];
           return (
