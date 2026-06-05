@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from '@/app/(shop)/auth/actions';
@@ -35,6 +37,22 @@ export function ProfileShell({
 }) {
   const router = useRouter();
   const pathname = usePathname() ?? '';
+  const [confirmOut, setConfirmOut] = useState(false);
+
+  // Close the sign-out confirmation on Escape and lock body scroll while open.
+  useEffect(() => {
+    if (!confirmOut) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setConfirmOut(false);
+    };
+    window.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [confirmOut]);
 
   const initial = (name || email || '?').charAt(0).toUpperCase();
 
@@ -115,12 +133,10 @@ export function ProfileShell({
               })}
             </nav>
 
-            <form
-              action={signOut}
-              className="p-4 border-t border-border flex-shrink-0 bg-white"
-            >
+            <div className="p-4 border-t border-border flex-shrink-0 bg-white">
               <button
-                type="submit"
+                type="button"
+                onClick={() => setConfirmOut(true)}
                 className="flex items-center gap-2 text-sm text-pinkHot hover:text-pinkHot/80 transition-colors"
               >
                 <svg
@@ -139,12 +155,60 @@ export function ProfileShell({
                 </svg>
                 Системээс гарах
               </button>
-            </form>
+            </div>
           </aside>
 
           <div className="p-8 sm:p-10 overflow-y-auto min-h-0">{children}</div>
         </div>
       </div>
+
+      {confirmOut && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="signout-confirm-title"
+          onClick={() => setConfirmOut(false)}
+        >
+          <div
+            className="bg-white rounded-[20px] shadow-soft max-w-sm w-full p-6 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-4xl mb-3">👋</div>
+            <h2 id="signout-confirm-title" className="font-serif text-xl mb-2">
+              Та гарахдаа итгэлтэй байна уу?
+            </h2>
+            <p className="text-sm text-ink/60 mb-6">
+              Гарсны дараа дахин нэвтрэх шаардлагатай болно.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmOut(false)}
+                className="btn-ghost flex-1"
+              >
+                Үгүй
+              </button>
+              <form action={signOut} className="flex-1">
+                <ConfirmSignOutButton />
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+/**
+ * Submit button for the sign-out form. Shows a pending label and disables
+ * itself while the server action runs so the user can't double-submit.
+ */
+function ConfirmSignOutButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" disabled={pending} className="btn-primary w-full">
+      {pending ? 'Гарч байна…' : 'Тийм'}
+    </button>
   );
 }
