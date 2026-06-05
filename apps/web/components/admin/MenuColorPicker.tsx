@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { updateMenuColors, resetMenuColors } from '@/app/admin/theme/actions';
 import {
   COLOR_PALETTE,
@@ -112,22 +112,10 @@ export function MenuColorPicker({ initial }: { initial: MenuColorMap }) {
                 disabled={isPending}
                 className="h-9 w-12 rounded-md border border-border cursor-pointer bg-transparent"
               />
-              <input
-                type="text"
+              <HexInput
                 value={isHexColor(selected) ? selected : selectedHex}
-                onChange={(e) => {
-                  const v = e.target.value.trim();
-                  if (HEX_RE.test(v)) pickColor(cat, v.toLowerCase());
-                  else {
-                    // Allow partial typing — only commit when valid hex.
-                    // But if cleared, revert to current saved value.
-                    setColors((prev) => ({ ...prev, [cat]: prev[cat] }));
-                  }
-                }}
+                onValidHex={(hex) => pickColor(cat, hex)}
                 disabled={isPending}
-                placeholder="#fbe6ee"
-                maxLength={7}
-                className="flex-1 sm:flex-none sm:w-32 bg-white border border-border rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-ink"
               />
               {isPresetSelected && (
                 <span className="text-[10px] uppercase tracking-wider text-ink/40">
@@ -206,5 +194,61 @@ export function MenuColorPicker({ initial }: { initial: MenuColorMap }) {
         </button>
       </div>
     </form>
+  );
+}
+
+/**
+ * Free-typing hex input.
+ * - Owns its own draft text so the user can type without value snap-back.
+ * - Auto-prepends `#` if the user types without it.
+ * - Calls onValidHex the moment the draft becomes a 6-digit hex (live preview).
+ * - Resyncs the draft when the parent value changes (e.g. native picker /
+ *   preset swatch click) so the input always reflects the committed color.
+ */
+function HexInput({
+  value,
+  onValidHex,
+  disabled,
+}: {
+  value: string;
+  onValidHex: (hex: string) => void;
+  disabled?: boolean;
+}) {
+  const [draft, setDraft] = useState<string>(value);
+
+  // External color change (picker / preset) → reset draft
+  useEffect(() => {
+    setDraft(value);
+  }, [value]);
+
+  const looksValid = HEX_RE.test(draft.trim());
+
+  function handle(raw: string) {
+    let next = raw.trim();
+    // Auto-prepend # if the user types a hex digit first
+    if (next && !next.startsWith('#')) next = '#' + next;
+    // Keep only # + hex chars, cap length 7
+    next = next.replace(/[^#0-9a-fA-F]/g, '').slice(0, 7);
+    setDraft(next);
+    if (HEX_RE.test(next)) {
+      onValidHex(next.toLowerCase());
+    }
+  }
+
+  return (
+    <input
+      type="text"
+      value={draft}
+      onChange={(e) => handle(e.target.value)}
+      disabled={disabled}
+      placeholder="#fbe6ee"
+      maxLength={7}
+      spellCheck={false}
+      className={`flex-1 sm:flex-none sm:w-32 bg-white border rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none transition-colors ${
+        draft && !looksValid
+          ? 'border-pinkHot/60 focus:border-pinkHot'
+          : 'border-border focus:border-ink'
+      }`}
+    />
   );
 }

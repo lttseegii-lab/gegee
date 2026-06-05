@@ -114,10 +114,10 @@ function MegaImage({ img }: { img: MegaImageCard }) {
   return (
     <Link
       href={img.href}
-      className="bg-white rounded-xl overflow-hidden flex flex-col group/img hover:-translate-y-0.5 transition-transform min-w-0"
+      className="flex flex-col group/img hover:-translate-y-0.5 transition-transform min-w-0"
     >
       <div
-        className={`relative aspect-square ${img.imageUrl ? 'bg-ink/5' : img.bgClass} flex items-center justify-center text-4xl overflow-hidden`}
+        className={`relative aspect-square ${img.imageUrl ? 'bg-ink/5' : img.bgClass} flex items-center justify-center text-4xl overflow-hidden rounded-xl`}
       >
         {img.imageUrl ? (
           // External URL — bypass next/image to skip host-allowlist config
@@ -132,11 +132,8 @@ function MegaImage({ img }: { img: MegaImageCard }) {
           <span>{img.emoji}</span>
         )}
       </div>
-      <div className="px-2.5 py-2.5 text-[13px] font-medium text-ink flex items-center justify-between gap-1">
-        <span className="truncate">{img.label}</span>
-        <span className="text-ink/40 group-hover/img:text-ink transition-colors shrink-0 text-base">
-          →
-        </span>
+      <div className="pt-3 text-center text-sm font-medium text-ink group-hover/img:text-pinkHot transition-colors">
+        {img.label}
       </div>
     </Link>
   );

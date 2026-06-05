@@ -14,6 +14,7 @@ import {
   type CategoryKey,
   type MegaImageConfig,
 } from '@/lib/theme/palette';
+import { ImageCropModal } from './ImageCropModal';
 
 const CATEGORY_LABELS: Record<CategoryKey, { icon: string; label: string }> = {
   flowers: { icon: '🌸', label: 'Цэцэг' },
@@ -186,15 +187,29 @@ function CardEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [pickedFile, setPickedFile] = useState<File | null>(null);
   const hasImage = !!card.image_url;
 
-  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setUploadError(null);
+    // Open crop modal — actual upload happens after crop is confirmed
+    setPickedFile(file);
+    // Clear the input so the SAME file can be re-picked after cancel
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  async function uploadCropped(blob: Blob) {
+    setPickedFile(null);
     setUploadError(null);
     setUploading(true);
     try {
       const fd = new FormData();
+      // Cropped output is always JPEG (from ImageCropModal canvas.toBlob)
+      const file = new File([blob], `mega-${Date.now()}.jpg`, {
+        type: 'image/jpeg',
+      });
       fd.append('file', file);
       const res = await uploadMegaImage(fd);
       if (res.error) {
@@ -204,7 +219,6 @@ function CardEditor({
       }
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }
 
@@ -323,6 +337,15 @@ function CardEditor({
           ))}
         </div>
       </div>
+
+      {/* Crop modal — appears after a file is picked, before upload */}
+      <ImageCropModal
+        file={pickedFile}
+        aspect={1}
+        outputSize={800}
+        onCancel={() => setPickedFile(null)}
+        onConfirm={uploadCropped}
+      />
     </div>
   );
 }
