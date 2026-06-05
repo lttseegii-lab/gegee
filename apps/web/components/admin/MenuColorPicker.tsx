@@ -151,7 +151,7 @@ export function MenuColorPicker({ initial }: { initial: MenuColorMap }) {
                     onClick={() => pickColor(cat, c.key)}
                     disabled={isPending}
                     title={c.label}
-                    className={`relative aspect-square rounded-lg border-2 transition-all hover:scale-105 ${
+                    className={`relative h-10 rounded-md border-2 transition-all hover:scale-105 ${
                       isActive
                         ? 'border-ink ring-2 ring-ink/20'
                         : 'border-border'
