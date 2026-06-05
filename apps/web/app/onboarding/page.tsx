@@ -10,7 +10,7 @@ import { MoodPicker } from '@/components/onboarding/MoodPicker';
 import { getOnboardingFlowers } from '@/lib/getOnboardingFlowers';
 import { MemoryDateAdder } from '@/components/account/MemoryDateAdder';
 import { FinishButton, DoneButton } from '@/components/onboarding/FinishButton';
-import { FlowerSalute } from '@/components/onboarding/FlowerSalute';
+import { GiftReveal } from '@/components/onboarding/GiftReveal';
 import { MOODS_BY_KEY } from '@/lib/moods';
 import { OCCASIONS, formatMonthDay } from '@/lib/memory/occasions';
 
@@ -251,8 +251,6 @@ function DoneStep({
   const showCelebration = bonusPoints > 0;
   return (
     <section className="text-center max-w-xl mx-auto relative">
-      {showCelebration && <FlowerSalute />}
-
       {flower ? (
         <div className="mx-auto mb-6 w-24 h-24 rounded-full overflow-hidden border border-border shadow-card">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -272,19 +270,7 @@ function DoneStep({
         Баярлалаа, <em>{name || 'найз'}</em>
       </h1>
 
-      {showCelebration && (
-        <div className="inline-flex items-center gap-3 bg-gradient-to-r from-pinkHot/15 via-yellow-pale to-mint/40 border border-pinkHot/30 rounded-full px-5 py-3 mb-6 shadow-card">
-          <span className="text-3xl">🎁</span>
-          <div className="text-left">
-            <div className="font-serif italic text-2xl text-ink leading-none">
-              +{bonusPoints.toLocaleString()} оноо
-            </div>
-            <div className="text-[11px] uppercase tracking-wider text-ink/60 mt-1">
-              Тавтай морилох бэлэг
-            </div>
-          </div>
-        </div>
-      )}
+      {showCelebration && <GiftReveal bonusPoints={bonusPoints} />}
 
       {flower ? (
         <p className="text-ink/70 mb-10 leading-relaxed">
