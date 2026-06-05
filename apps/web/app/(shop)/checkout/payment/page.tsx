@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { redirect, notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { requireOnboarded } from '@/lib/auth/requireOnboarding';
 import { createInvoice } from '@/lib/qpay/client';
 import { PaymentPoller } from '@/components/checkout/PaymentPoller';
 
@@ -18,8 +19,9 @@ export default async function PaymentPage({
   if (!orderId || isNaN(orderId)) notFound();
 
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/login');
+  // Defense in depth: reaching payment requires a created order (which already
+  // passes the checkout gate), but enforce the onboarding gate here too.
+  const user = await requireOnboarded('/checkout');
 
   // Fetch order
   const { data: order } = await supabase

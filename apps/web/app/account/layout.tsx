@@ -17,9 +17,15 @@ export default async function AccountLayout({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('name, signature_mood')
+    .select('name, signature_mood, onboarded_at')
     .eq('id', user.id)
     .maybeSingle();
+
+  // Registration isn't complete until onboarding is finished. Until then the
+  // account isn't usable — bounce half-registered users back to finish it.
+  if (!profile || profile.onboarded_at == null) {
+    redirect('/onboarding?next=/account/profile');
+  }
 
   const name = profile?.name ?? user.email ?? 'Хэрэглэгч';
   const email = user.email ?? '';

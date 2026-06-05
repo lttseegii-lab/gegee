@@ -1,7 +1,7 @@
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
+import { requireOnboarded } from '@/lib/auth/requireOnboarding';
 import { CheckoutForm } from '@/components/checkout/CheckoutForm';
 import {
   CheckoutStepIndicator,
@@ -23,10 +23,9 @@ export default async function CheckoutPage({
   searchParams: SearchParams;
 }) {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/login?next=/checkout');
+  // Must be a fully-registered (onboarded) user to check out. Half-registered
+  // users — signed in but never finished onboarding — are sent to finish it.
+  const user = await requireOnboarded('/checkout');
 
   const step = parseStep(searchParams.step);
 
