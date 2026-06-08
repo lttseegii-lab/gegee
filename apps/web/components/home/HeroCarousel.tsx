@@ -136,7 +136,7 @@ export function HeroCarousel({
                       href="/recommend"
                       className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-ink text-white font-medium text-sm transition-colors hover:bg-pinkHot"
                     >
-                      ✨ AI санал авах
+                      ✨ AI туслуулах
                     </Link>
                     <Link
                       href="/catalog/all"
@@ -156,7 +156,7 @@ export function HeroCarousel({
                           : 'text-ink hover:text-pinkHot'
                       }`}
                     >
-                      Өөрийн гараар →
+                      DIY →
                     </Link>
                   </div>
                   <div

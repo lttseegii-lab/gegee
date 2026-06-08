@@ -47,7 +47,7 @@ export interface MegaTab {
 
 export const MEGA_TABS: MegaTab[] = [
   {
-    label: 'Өөрийн гараар',
+    label: 'DIY',
     href: '/diy',
     badge: 'new',
     hasMega: false,
