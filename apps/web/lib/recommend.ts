@@ -6,11 +6,14 @@ import type { Product } from '@/types/database';
 import { MOODS_BY_KEY, type Mood } from './moods';
 
 export interface RecommendInput {
-  /** Natural language: "Ээждээ, 150K дотор, дулаан өнгөтэй" */
-  query: string;
+  /** Optional free-text note: "Ээждээ, 150K дотор, дулаан өнгөтэй" */
+  query?: string;
   mood?: string;
   budget?: number;
-  recipient?: 'mom' | 'partner' | 'friend' | 'colleague' | 'self' | string;
+  /** Structured selections — keys from RECIPIENTS / OCCASIONS / COLORS. */
+  recipient?: string;
+  occasion?: string;
+  color?: string;
 }
 
 export interface RecommendScore {
@@ -18,6 +21,53 @@ export interface RecommendScore {
   score: number;
   reasons: string[];
 }
+
+// ── Structured selection options for the guided "AI санал" wizard ──
+// Each option maps to product tags the scorer already understands.
+export interface RecommendOption {
+  key: string;
+  label: string;
+  emoji: string;
+  tags: string[];
+  /** RECIPIENTS only — dative form used in the summary ("Ээждээ"). */
+  dative?: string;
+  /** OCCASIONS / COLORS — phrase fragment used in the summary. */
+  phrase?: string;
+}
+
+/** Хэнд — who the flowers are for. */
+export const RECIPIENTS: RecommendOption[] = [
+  { key: 'mom', label: 'Ээж', emoji: '🌷', dative: 'Ээждээ', tags: ['romance', 'peony', 'pink', 'elegant'] },
+  { key: 'dad', label: 'Аав', emoji: '🌿', dative: 'Аавдаа', tags: ['hand-tied', 'sage', 'eucalyptus'] },
+  { key: 'partner', label: 'Хайрт', emoji: '❤️', dative: 'Хайртдаа', tags: ['romance', 'peony', 'rose'] },
+  { key: 'friend', label: 'Найз', emoji: '🎉', dative: 'Найздаа', tags: ['celebration', 'colorful', 'just-because'] },
+  { key: 'sister', label: 'Эгч / дүү', emoji: '💐', dative: 'Эгч дүүдээ', tags: ['celebration', 'pink', 'bouquet'] },
+  { key: 'colleague', label: 'Хамт олон', emoji: '🤝', dative: 'Хамт олондоо', tags: ['elegant', 'minimal', 'sage'] },
+  { key: 'self', label: 'Өөртөө', emoji: '✨', dative: 'Өөртөө', tags: ['just-because', 'colorful'] },
+];
+
+/** Ямар үйл явдал — the occasion. */
+export const OCCASIONS: RecommendOption[] = [
+  { key: 'birthday', label: 'Төрсөн өдөр', emoji: '🎂', phrase: 'төрсөн өдрийн баярт', tags: ['birthday', 'celebration', 'sunflower'] },
+  { key: 'anniversary', label: 'Ой тэмдэглэл', emoji: '💍', phrase: 'ой тэмдэглэлд', tags: ['anniversary', 'romance', 'rose'] },
+  { key: 'love', label: 'Хайраа илэрхийлэх', emoji: '💕', phrase: 'хайраа илэрхийлэхэд', tags: ['romance', 'rose', 'peony'] },
+  { key: 'thanks', label: 'Талархал', emoji: '🙏', phrase: 'талархлаа илэрхийлэхэд', tags: ['celebration', 'peach', 'yellow'] },
+  { key: 'apology', label: 'Уучлал', emoji: '🥺', phrase: 'уучлал гуйхад', tags: ['apology', 'white', 'lily'] },
+  { key: 'sympathy', label: 'Тайтгарал', emoji: '🕊️', phrase: 'тайтгаруулахад', tags: ['sympathy', 'lily', 'white', 'sage'] },
+  { key: 'newhome', label: 'Шинэ гэр', emoji: '🏡', phrase: 'шинэ гэрийн баярт', tags: ['plant', 'houseplant', 'celebration'] },
+  { key: 'justbecause', label: 'Зүгээр л', emoji: '🌼', phrase: '', tags: ['just-because', 'colorful'] },
+];
+
+/** Өнгө / мэдрэмж — palette / vibe. */
+export const COLORS: RecommendOption[] = [
+  { key: 'warm', label: 'Дулаан', emoji: '🧡', phrase: 'дулаан өнгийн', tags: ['peach', 'yellow', 'sunflower', 'rose'] },
+  { key: 'cool', label: 'Сэрүүн', emoji: '🩵', phrase: 'сэрүүн өнгийн', tags: ['white', 'lily', 'sage', 'eucalyptus'] },
+  { key: 'pink', label: 'Ягаан', emoji: '🌸', phrase: 'ягаан', tags: ['pink', 'peony', 'rose'] },
+  { key: 'white', label: 'Цагаан', emoji: '🤍', phrase: 'цагаан', tags: ['white', 'lily', 'elegant'] },
+  { key: 'red', label: 'Улаан', emoji: '❤️', phrase: 'улаан', tags: ['red', 'rose', 'romance'] },
+  { key: 'yellow', label: 'Шар', emoji: '💛', phrase: 'шар', tags: ['yellow', 'sunflower', 'tulip'] },
+  { key: 'elegant', label: 'Эрхэмсэг', emoji: '🥂', phrase: 'эрхэмсэг', tags: ['elegant', 'premium', 'luxury'] },
+];
 
 // Mongolian keyword → tag/feature hints
 const KEYWORD_MAP: Array<{ patterns: string[]; tags: string[]; reason: string }> = [
@@ -75,7 +125,7 @@ export function parseInput(input: RecommendInput): {
   budget: number | null;
   mood: Mood | null;
 } {
-  const q = input.query.toLowerCase();
+  const q = (input.query ?? '').toLowerCase();
   const tags = new Set<string>();
   const reasons: string[] = [];
 
@@ -84,6 +134,18 @@ export function parseInput(input: RecommendInput): {
   if (mood) {
     mood.tags.forEach((t) => tags.add(t));
     reasons.push(`${mood.label} мэдрэмж`);
+  }
+
+  // Structured selections (recipient / occasion / color) → tags
+  const selected: Array<RecommendOption | undefined> = [
+    RECIPIENTS.find((o) => o.key === input.recipient),
+    OCCASIONS.find((o) => o.key === input.occasion),
+    COLORS.find((o) => o.key === input.color),
+  ];
+  for (const opt of selected) {
+    if (!opt) continue;
+    opt.tags.forEach((t) => tags.add(t));
+    if (!reasons.includes(opt.label)) reasons.push(opt.label);
   }
 
   // Keyword scan
@@ -97,7 +159,7 @@ export function parseInput(input: RecommendInput): {
     }
   }
 
-  const budget = input.budget ?? parseBudget(input.query);
+  const budget = input.budget ?? parseBudget(input.query ?? '');
 
   return { tags: Array.from(tags), reasons, budget, mood };
 }
@@ -144,4 +206,24 @@ export function scoreProducts(
     })
     .filter((r) => r.score > 0)
     .sort((a, b) => b.score - a.score);
+}
+
+/**
+ * Friendly, AI-Concierge-style headline composed from the structured
+ * selections — e.g. "Ээждээ төрсөн өдрийн баярт дулаан өнгийн баглаа онцгой
+ * таарна." Degrades gracefully when some fields are not chosen.
+ */
+export function buildRecommendSummary(
+  input: Pick<RecommendInput, 'recipient' | 'occasion' | 'color'>,
+  count: number
+): string {
+  const r = RECIPIENTS.find((o) => o.key === input.recipient);
+  const o = OCCASIONS.find((o) => o.key === input.occasion);
+  const c = COLORS.find((o) => o.key === input.color);
+
+  const who = r?.dative ?? 'Танд';
+  const occ = o?.phrase ? `${o.phrase} ` : '';
+  const flower = c?.phrase ? `${c.phrase} баглаа` : 'тохирох баглаа';
+
+  return `${who} ${occ}${flower} онцгой таарна. Доорх ${count} сонголтыг санал болголоо 🌸`;
 }

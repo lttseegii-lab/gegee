@@ -2,7 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import type { Mood } from '@/lib/moods';
+import {
+  RECIPIENTS,
+  OCCASIONS,
+  COLORS,
+  type RecommendOption,
+} from '@/lib/recommend';
 
 const BUDGET_PRESETS = [
   { value: '50000', label: '50K' },
@@ -13,112 +18,124 @@ const BUDGET_PRESETS = [
   { value: '500000', label: '500K+' },
 ];
 
-const QUICK_EXAMPLES = [
-  'Ээждээ, 150K дотор, дулаан өнгөтэй elegant баглаа',
-  'Хайрт хүнтэйгээ ой тэмдэглэх, premium, ягаан пион',
-  'Найз эмэгтэйд төрсөн өдрийн баяр хүргэх, цайвар өнгөтэй',
-  'Уучлал гуйх жижигхэн letterbox',
-  'Pet-safe ургамал шинэ гэрт',
-];
+function chipClass(active: boolean) {
+  return `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors ${
+    active
+      ? 'bg-ink text-white border-ink'
+      : 'bg-white text-ink border-border hover:border-ink'
+  }`;
+}
+
+function ChipGroup({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: RecommendOption[];
+  value: string | null;
+  onChange: (v: string | null) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-xs uppercase tracking-wider text-ink/60 mb-2">
+        {label}
+      </label>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((o) => {
+          const active = value === o.key;
+          return (
+            <button
+              key={o.key}
+              type="button"
+              onClick={() => onChange(active ? null : o.key)}
+              className={chipClass(active)}
+            >
+              <span>{o.emoji}</span>
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export function RecommendForm({
-  initialQuery,
-  initialMood,
+  initialRecipient,
+  initialOccasion,
+  initialColor,
   initialBudget,
-  moods,
+  initialQuery,
 }: {
-  initialQuery: string;
-  initialMood: string | null;
+  initialRecipient: string | null;
+  initialOccasion: string | null;
+  initialColor: string | null;
   initialBudget: string;
-  moods: Mood[];
+  initialQuery: string;
 }) {
   const router = useRouter();
-  const [query, setQuery] = useState(initialQuery);
-  const [mood, setMood] = useState<string | null>(initialMood);
+  const [recipient, setRecipient] = useState<string | null>(initialRecipient);
+  const [occasion, setOccasion] = useState<string | null>(initialOccasion);
+  const [color, setColor] = useState<string | null>(initialColor);
   const [budget, setBudget] = useState(initialBudget);
+  const [query, setQuery] = useState(initialQuery);
+
+  const canSubmit = Boolean(recipient || occasion || color || query.trim());
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (query.trim()) params.set('q', query.trim());
-    if (mood) params.set('mood', mood);
+    if (recipient) params.set('recipient', recipient);
+    if (occasion) params.set('occasion', occasion);
+    if (color) params.set('color', color);
     if (budget) params.set('budget', budget);
+    if (query.trim()) params.set('q', query.trim());
     router.push(`/recommend?${params.toString()}`);
   }
 
   return (
-    <form onSubmit={submit} className="bg-white border border-border rounded-card p-6 space-y-5">
-      {/* Query */}
-      <div>
-        <label className="block text-xs uppercase tracking-wider text-ink/60 mb-1.5">
-          Юу хэлэх вэ?
-        </label>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Жишээ нь: Ээждээ, 150K дотор, дулаан өнгөтэй..."
-          className="w-full border border-border rounded-lg px-4 py-3 text-base focus:outline-none focus:border-ink"
-        />
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {QUICK_EXAMPLES.map((ex) => (
-            <button
-              key={ex}
-              type="button"
-              onClick={() => setQuery(ex)}
-              className="text-[11px] px-2.5 py-1 rounded-full border border-border bg-offwhite text-ink/70 hover:border-ink hover:text-ink transition-colors"
-            >
-              {ex.slice(0, 40)}{ex.length > 40 ? '…' : ''}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Mood picker (chips) */}
-      <div>
-        <label className="block text-xs uppercase tracking-wider text-ink/60 mb-1.5">
-          Сэтгэл хөдлөл
-        </label>
-        <div className="flex flex-wrap gap-1.5">
-          {moods.map((m) => {
-            const isActive = mood === m.key;
-            return (
-              <button
-                key={m.key}
-                type="button"
-                onClick={() => setMood(isActive ? null : m.key)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors ${
-                  isActive
-                    ? 'bg-ink text-white border-ink'
-                    : 'bg-white text-ink border-border hover:border-ink'
-                }`}
-              >
-                <span>{m.emoji}</span>
-                {m.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+    <form
+      onSubmit={submit}
+      className="bg-white border border-border rounded-card p-6 space-y-6"
+    >
+      <ChipGroup
+        label="Хэнд бэлэглэх вэ?"
+        options={RECIPIENTS}
+        value={recipient}
+        onChange={setRecipient}
+      />
+      <ChipGroup
+        label="Ямар учир шалтгаанаар?"
+        options={OCCASIONS}
+        value={occasion}
+        onChange={setOccasion}
+      />
+      <ChipGroup
+        label="Өнгө / мэдрэмж"
+        options={COLORS}
+        value={color}
+        onChange={setColor}
+      />
 
       {/* Budget */}
       <div>
-        <label className="block text-xs uppercase tracking-wider text-ink/60 mb-1.5">
-          Төсөв (заавал биш)
+        <label className="block text-xs uppercase tracking-wider text-ink/60 mb-2">
+          Төсөв{' '}
+          <span className="text-ink/40 normal-case tracking-normal">
+            (заавал биш)
+          </span>
         </label>
         <div className="flex flex-wrap gap-1.5 items-center">
           {BUDGET_PRESETS.map((b) => {
-            const isActive = budget === b.value;
+            const active = budget === b.value;
             return (
               <button
                 key={b.value}
                 type="button"
-                onClick={() => setBudget(isActive ? '' : b.value)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors ${
-                  isActive
-                    ? 'bg-ink text-white border-ink'
-                    : 'bg-white text-ink border-border hover:border-ink'
-                }`}
+                onClick={() => setBudget(active ? '' : b.value)}
+                className={chipClass(active)}
               >
                 {b.label}
               </button>
@@ -128,14 +145,35 @@ export function RecommendForm({
             type="number"
             value={budget}
             onChange={(e) => setBudget(e.target.value)}
-            placeholder="бусад..."
-            className="border border-border rounded-full px-3 py-1.5 text-sm w-28 focus:outline-none focus:border-ink"
+            placeholder="бусад…"
+            className="border border-border rounded-full px-3 py-1.5 text-sm w-24 focus:outline-none focus:border-ink"
           />
         </div>
       </div>
 
-      <button type="submit" className="btn-primary w-full">
-        AI санал авах →
+      {/* Optional free-text note */}
+      <div>
+        <label className="block text-xs uppercase tracking-wider text-ink/60 mb-2">
+          Нэмэлт хүсэл{' '}
+          <span className="text-ink/40 normal-case tracking-normal">
+            (заавал биш)
+          </span>
+        </label>
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Жишээ нь: пиончтой, жижигхэн letterbox…"
+          className="w-full border border-border rounded-lg px-4 py-3 text-base focus:outline-none focus:border-ink"
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={!canSubmit}
+        className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        ✨ AI санал авах →
       </button>
     </form>
   );
