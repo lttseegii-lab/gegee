@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { ProductGrid } from '@/components/product/ProductGrid';
-import { MoodPicker } from '@/components/home/MoodPicker';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { getHeroBanners } from '@/lib/theme/getTheme';
 
@@ -35,9 +34,6 @@ export default async function HomePage() {
         slides={heroConfig.slides}
         intervalMs={heroConfig.interval_ms}
       />
-
-      {/* Mood picker — "Care wildly" — Ямар мэдрэмж илэрхийлэх вэ */}
-      <MoodPicker />
 
       {/* Collection circles */}
       <section className="border-b border-border">
