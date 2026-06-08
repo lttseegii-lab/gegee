@@ -6,14 +6,15 @@ import type { Product } from '@/types/database';
 import { MOODS_BY_KEY, type Mood } from './moods';
 
 export interface RecommendInput {
-  /** Optional free-text note: "Ээждээ, 150K дотор, дулаан өнгөтэй" */
+  /** Optional free-text note: "Ээждээ, 150K дотор, төрсөн өдөр" */
   query?: string;
   mood?: string;
   budget?: number;
-  /** Structured selections — keys from RECIPIENTS / OCCASIONS / COLORS. */
+  /** Structured selections — keys from RECIPIENTS / OCCASIONS / ZODIAC / AGES. */
   recipient?: string;
   occasion?: string;
-  color?: string;
+  zodiac?: string;
+  age?: string;
 }
 
 export interface RecommendScore {
@@ -31,8 +32,10 @@ export interface RecommendOption {
   tags: string[];
   /** RECIPIENTS only — dative form used in the summary ("Ээждээ"). */
   dative?: string;
-  /** OCCASIONS / COLORS — phrase fragment used in the summary. */
+  /** OCCASIONS — phrase fragment used in the summary. */
   phrase?: string;
+  /** ZODIAC — Mongolian "birth flower" name recommended for this sign. */
+  flower?: string;
 }
 
 /** Хэнд — who the flowers are for. */
@@ -50,6 +53,7 @@ export const RECIPIENTS: RecommendOption[] = [
 export const OCCASIONS: RecommendOption[] = [
   { key: 'birthday', label: 'Төрсөн өдөр', emoji: '🎂', phrase: 'төрсөн өдрийн баярт', tags: ['birthday', 'celebration', 'sunflower'] },
   { key: 'anniversary', label: 'Ой тэмдэглэл', emoji: '💍', phrase: 'ой тэмдэглэлд', tags: ['anniversary', 'romance', 'rose'] },
+  { key: 'congrats', label: 'Баяр хүргэе', emoji: '🎊', phrase: 'баяр хүргэхэд', tags: ['celebration', 'colorful', 'sunflower'] },
   { key: 'love', label: 'Хайраа илэрхийлэх', emoji: '💕', phrase: 'хайраа илэрхийлэхэд', tags: ['romance', 'rose', 'peony'] },
   { key: 'thanks', label: 'Талархал', emoji: '🙏', phrase: 'талархлаа илэрхийлэхэд', tags: ['celebration', 'peach', 'yellow'] },
   { key: 'apology', label: 'Уучлал', emoji: '🥺', phrase: 'уучлал гуйхад', tags: ['apology', 'white', 'lily'] },
@@ -58,15 +62,34 @@ export const OCCASIONS: RecommendOption[] = [
   { key: 'justbecause', label: 'Зүгээр л', emoji: '🌼', phrase: '', tags: ['just-because', 'colorful'] },
 ];
 
-/** Өнгө / мэдрэмж — palette / vibe. */
-export const COLORS: RecommendOption[] = [
-  { key: 'warm', label: 'Дулаан', emoji: '🧡', phrase: 'дулаан өнгийн', tags: ['peach', 'yellow', 'sunflower', 'rose'] },
-  { key: 'cool', label: 'Сэрүүн', emoji: '🩵', phrase: 'сэрүүн өнгийн', tags: ['white', 'lily', 'sage', 'eucalyptus'] },
-  { key: 'pink', label: 'Ягаан', emoji: '🌸', phrase: 'ягаан', tags: ['pink', 'peony', 'rose'] },
-  { key: 'white', label: 'Цагаан', emoji: '🤍', phrase: 'цагаан', tags: ['white', 'lily', 'elegant'] },
-  { key: 'red', label: 'Улаан', emoji: '❤️', phrase: 'улаан', tags: ['red', 'rose', 'romance'] },
-  { key: 'yellow', label: 'Шар', emoji: '💛', phrase: 'шар', tags: ['yellow', 'sunflower', 'tulip'] },
-  { key: 'elegant', label: 'Эрхэмсэг', emoji: '🥂', phrase: 'эрхэмсэг', tags: ['elegant', 'premium', 'luxury'] },
+/**
+ * Орд — zodiac sign. Each maps to its "birth flower" + matching tags so the
+ * AI can suggest a concrete bloom even to someone who knows nothing about
+ * flowers (e.g. "Арслан ордны хүнд Наран цэцэг тохирно").
+ */
+export const ZODIAC: RecommendOption[] = [
+  { key: 'aries', label: 'Хонь', emoji: '♈', flower: 'Цахилдаг', tags: ['tulip', 'red', 'celebration'] },
+  { key: 'taurus', label: 'Үхэр', emoji: '♉', flower: 'Сарнай', tags: ['rose', 'pink', 'romance'] },
+  { key: 'gemini', label: 'Ихэр', emoji: '♊', flower: 'Лаванда', tags: ['lavender', 'colorful', 'celebration'] },
+  { key: 'cancer', label: 'Мэлхий', emoji: '♋', flower: 'Цагаан сарнай', tags: ['white', 'rose', 'lily'] },
+  { key: 'leo', label: 'Арслан', emoji: '♌', flower: 'Наран цэцэг', tags: ['sunflower', 'yellow', 'celebration'] },
+  { key: 'virgo', label: 'Охин', emoji: '♍', flower: 'Дэйзи', tags: ['daisy', 'white', 'elegant'] },
+  { key: 'libra', label: 'Жинлүүр', emoji: '♎', flower: 'Сарнай', tags: ['rose', 'pink', 'elegant'] },
+  { key: 'scorpio', label: 'Хилэнц', emoji: '♏', flower: 'Пион', tags: ['peony', 'red', 'romance'] },
+  { key: 'sagittarius', label: 'Нумч', emoji: '♐', flower: 'Карнатин', tags: ['carnation', 'colorful', 'celebration'] },
+  { key: 'capricorn', label: 'Матар', emoji: '♑', flower: 'Орхид', tags: ['elegant', 'premium', 'white'] },
+  { key: 'aquarius', label: 'Хумх', emoji: '♒', flower: 'Орхид', tags: ['elegant', 'premium', 'lavender'] },
+  { key: 'pisces', label: 'Загас', emoji: '♓', flower: 'Сараана', tags: ['lily', 'white', 'sage'] },
+];
+
+/** Нас — recipient age band; nudges style from playful → classic. */
+export const AGES: RecommendOption[] = [
+  { key: 'child', label: 'Хүүхэд', emoji: '🧒', tags: ['colorful', 'sunflower', 'celebration'] },
+  { key: 'teen', label: 'Өсвөр', emoji: '🧑', tags: ['pink', 'colorful', 'celebration'] },
+  { key: 'young', label: '18–25', emoji: '💫', tags: ['pink', 'peony', 'rose'] },
+  { key: 'adult', label: '26–40', emoji: '🌷', tags: ['rose', 'peony', 'elegant'] },
+  { key: 'mature', label: '41–60', emoji: '🌹', tags: ['elegant', 'lily', 'premium'] },
+  { key: 'senior', label: '60+', emoji: '🕊️', tags: ['white', 'lily', 'elegant'] },
 ];
 
 // Mongolian keyword → tag/feature hints
@@ -136,11 +159,12 @@ export function parseInput(input: RecommendInput): {
     reasons.push(`${mood.label} мэдрэмж`);
   }
 
-  // Structured selections (recipient / occasion / color) → tags
+  // Structured selections (recipient / occasion / zodiac / age) → tags
   const selected: Array<RecommendOption | undefined> = [
     RECIPIENTS.find((o) => o.key === input.recipient),
     OCCASIONS.find((o) => o.key === input.occasion),
-    COLORS.find((o) => o.key === input.color),
+    ZODIAC.find((o) => o.key === input.zodiac),
+    AGES.find((o) => o.key === input.age),
   ];
   for (const opt of selected) {
     if (!opt) continue;
@@ -213,17 +237,35 @@ export function scoreProducts(
  * selections — e.g. "Ээждээ төрсөн өдрийн баярт дулаан өнгийн баглаа онцгой
  * таарна." Degrades gracefully when some fields are not chosen.
  */
+const OCCASION_FLOWER: Record<string, string> = {
+  birthday: 'Наран цэцэг',
+  anniversary: 'Улаан сарнай',
+  congrats: 'Өнгөлөг баглаа',
+  love: 'Улаан сарнай',
+  thanks: 'Шар сарнай',
+  apology: 'Цагаан сараана',
+  sympathy: 'Цагаан сараана',
+  newhome: 'Ногоон ургамал',
+  justbecause: 'Улирлын баглаа',
+};
+
 export function buildRecommendSummary(
-  input: Pick<RecommendInput, 'recipient' | 'occasion' | 'color'>,
+  input: Pick<RecommendInput, 'recipient' | 'occasion' | 'zodiac' | 'age'>,
   count: number
 ): string {
   const r = RECIPIENTS.find((o) => o.key === input.recipient);
   const o = OCCASIONS.find((o) => o.key === input.occasion);
-  const c = COLORS.find((o) => o.key === input.color);
+  const z = ZODIAC.find((o) => o.key === input.zodiac);
 
   const who = r?.dative ?? 'Танд';
   const occ = o?.phrase ? `${o.phrase} ` : '';
-  const flower = c?.phrase ? `${c.phrase} баглаа` : 'тохирох баглаа';
+  // Always name a concrete flower — zodiac birth-flower first, else an
+  // occasion default — so a flower-novice gets a clear "pick this" tip.
+  const flower =
+    z?.flower ??
+    (input.occasion ? OCCASION_FLOWER[input.occasion] : undefined) ??
+    'Сарнай';
+  const zodiacNote = z ? ` (${z.label} ордны хүнд онцгой тохирдог)` : '';
 
-  return `${who} ${occ}${flower} онцгой таарна. Доорх ${count} сонголтыг санал болголоо 🌸`;
+  return `${who} ${occ}${flower} сонгож үзвэл таарна${zodiacNote}. Доорх ${count} баглааг санал болголоо 🌸`;
 }

@@ -5,18 +5,10 @@ import { useState } from 'react';
 import {
   RECIPIENTS,
   OCCASIONS,
-  COLORS,
+  ZODIAC,
+  AGES,
   type RecommendOption,
 } from '@/lib/recommend';
-
-const BUDGET_PRESETS = [
-  { value: '50000', label: '50K' },
-  { value: '100000', label: '100K' },
-  { value: '150000', label: '150K' },
-  { value: '200000', label: '200K' },
-  { value: '300000', label: '300K' },
-  { value: '500000', label: '500K+' },
-];
 
 function chipClass(active: boolean) {
   return `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors ${
@@ -65,32 +57,34 @@ function ChipGroup({
 export function RecommendForm({
   initialRecipient,
   initialOccasion,
-  initialColor,
-  initialBudget,
+  initialZodiac,
+  initialAge,
   initialQuery,
 }: {
   initialRecipient: string | null;
   initialOccasion: string | null;
-  initialColor: string | null;
-  initialBudget: string;
+  initialZodiac: string | null;
+  initialAge: string | null;
   initialQuery: string;
 }) {
   const router = useRouter();
   const [recipient, setRecipient] = useState<string | null>(initialRecipient);
   const [occasion, setOccasion] = useState<string | null>(initialOccasion);
-  const [color, setColor] = useState<string | null>(initialColor);
-  const [budget, setBudget] = useState(initialBudget);
+  const [zodiac, setZodiac] = useState<string | null>(initialZodiac);
+  const [age, setAge] = useState<string | null>(initialAge);
   const [query, setQuery] = useState(initialQuery);
 
-  const canSubmit = Boolean(recipient || occasion || color || query.trim());
+  const canSubmit = Boolean(
+    recipient || occasion || zodiac || age || query.trim()
+  );
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams();
     if (recipient) params.set('recipient', recipient);
     if (occasion) params.set('occasion', occasion);
-    if (color) params.set('color', color);
-    if (budget) params.set('budget', budget);
+    if (zodiac) params.set('zodiac', zodiac);
+    if (age) params.set('age', age);
     if (query.trim()) params.set('q', query.trim());
     router.push(`/recommend?${params.toString()}`);
   }
@@ -113,43 +107,17 @@ export function RecommendForm({
         onChange={setOccasion}
       />
       <ChipGroup
-        label="Өнгө / мэдрэмж"
-        options={COLORS}
-        value={color}
-        onChange={setColor}
+        label="Ямар орд вэ?"
+        options={ZODIAC}
+        value={zodiac}
+        onChange={setZodiac}
       />
-
-      {/* Budget */}
-      <div>
-        <label className="block text-xs uppercase tracking-wider text-ink/60 mb-2">
-          Төсөв{' '}
-          <span className="text-ink/40 normal-case tracking-normal">
-            (заавал биш)
-          </span>
-        </label>
-        <div className="flex flex-wrap gap-1.5 items-center">
-          {BUDGET_PRESETS.map((b) => {
-            const active = budget === b.value;
-            return (
-              <button
-                key={b.value}
-                type="button"
-                onClick={() => setBudget(active ? '' : b.value)}
-                className={chipClass(active)}
-              >
-                {b.label}
-              </button>
-            );
-          })}
-          <input
-            type="number"
-            value={budget}
-            onChange={(e) => setBudget(e.target.value)}
-            placeholder="бусад…"
-            className="border border-border rounded-full px-3 py-1.5 text-sm w-24 focus:outline-none focus:border-ink"
-          />
-        </div>
-      </div>
+      <ChipGroup
+        label="Хэдэн настай вэ?"
+        options={AGES}
+        value={age}
+        onChange={setAge}
+      />
 
       {/* Optional free-text note */}
       <div>
@@ -173,7 +141,7 @@ export function RecommendForm({
         disabled={!canSubmit}
         className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        ✨ AI санал авах →
+        ✨ AI зөвлөгөө авах →
       </button>
     </form>
   );

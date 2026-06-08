@@ -13,19 +13,21 @@ export default async function RecommendPage({
     q?: string;
     recipient?: string;
     occasion?: string;
-    color?: string;
+    zodiac?: string;
+    age?: string;
     budget?: string;
   };
 }) {
   const q = (searchParams.q ?? '').trim();
   const recipient = searchParams.recipient || undefined;
   const occasion = searchParams.occasion || undefined;
-  const color = searchParams.color || undefined;
+  const zodiac = searchParams.zodiac || undefined;
+  const age = searchParams.age || undefined;
   const budget = searchParams.budget
     ? parseInt(searchParams.budget, 10)
     : undefined;
 
-  const hasInput = Boolean(q || recipient || occasion || color);
+  const hasInput = Boolean(q || recipient || occasion || zodiac || age);
 
   let results: Awaited<ReturnType<typeof scoreProducts>> = [];
   if (hasInput) {
@@ -38,7 +40,8 @@ export default async function RecommendPage({
       query: q,
       recipient,
       occasion,
-      color,
+      zodiac,
+      age,
       budget,
     });
   }
@@ -46,7 +49,7 @@ export default async function RecommendPage({
   const top = results.slice(0, 6);
   const summary =
     hasInput && top.length > 0
-      ? buildRecommendSummary({ recipient, occasion, color }, top.length)
+      ? buildRecommendSummary({ recipient, occasion, zodiac, age }, top.length)
       : null;
 
   return (
@@ -59,32 +62,43 @@ export default async function RecommendPage({
         <span className="text-ink font-medium">AI санал</span>
       </nav>
 
-      <header className="mb-8 max-w-2xl">
-        <p className="text-[13px] uppercase tracking-[0.2em] text-ink/50 mb-2">
-          AI Concierge
-        </p>
-        <h1 className="font-serif italic text-4xl mb-3">
-          Хэнд, ямар учраар бэлэглэх вэ?
-        </h1>
-        <p className="text-ink/70">
-          Хэдэн сонголт хийхэд л AI тухайн хүнд хамгийн тохирох баглааг санал
-          болгоно.
-        </p>
-      </header>
+      {!hasInput ? (
+        <>
+          <header className="mb-8 max-w-2xl">
+            <h1 className="font-serif italic text-4xl mb-3">
+              Хэнд, ямар учраар бэлэглэх вэ?
+            </h1>
+            <p className="text-ink/70">
+              AI зөвлөгөө авч тохирох цэцгээ сонгоорой.
+            </p>
+          </header>
 
-      <RecommendForm
-        initialRecipient={recipient ?? null}
-        initialOccasion={occasion ?? null}
-        initialColor={color ?? null}
-        initialBudget={budget?.toString() ?? ''}
-        initialQuery={q}
-      />
+          <RecommendForm
+            initialRecipient={recipient ?? null}
+            initialOccasion={occasion ?? null}
+            initialZodiac={zodiac ?? null}
+            initialAge={age ?? null}
+            initialQuery={q}
+          />
+        </>
+      ) : (
+        <section>
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <h1 className="font-serif italic text-3xl">Танд зориулсан санал</h1>
+            <Link
+              href="/recommend"
+              className="text-sm text-ink/60 hover:text-ink whitespace-nowrap"
+            >
+              ← Дахин сонгох
+            </Link>
+          </div>
 
-      {hasInput && (
-        <section className="mt-10">
           {results.length === 0 ? (
             <div className="text-center py-16 text-sm text-ink/50">
-              Тохирох санал олдсонгүй. Өөр сонголт хийгээд үзнэ үү.
+              Тохирох санал олдсонгүй.{' '}
+              <Link href="/recommend" className="text-pinkHot hover:underline">
+                Өөр сонголт хийнэ үү →
+              </Link>
             </div>
           ) : (
             <>
@@ -93,7 +107,7 @@ export default async function RecommendPage({
                   <span className="text-2xl leading-none">✨</span>
                   <div>
                     <p className="text-[11px] uppercase tracking-wider text-pinkHot mb-1">
-                      AI санал
+                      AI зөвлөгөө
                     </p>
                     <p className="font-serif italic text-xl text-ink leading-snug">
                       {summary}
