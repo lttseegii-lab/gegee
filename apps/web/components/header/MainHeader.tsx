@@ -87,7 +87,8 @@ export async function MainHeader() {
   const tabs = applyTheme(MEGA_TABS, menuColors, menuImages, menuSubcats);
 
   return (
-    <header className="bg-white border-b border-border">
+    <>
+      <header className="bg-white border-b border-border">
       {/* Row 1: Promo bar */}
       <div className="bg-lilac py-2.5 text-[13px] text-ink">
         <div className="max-w-container mx-auto px-6 flex items-center justify-between gap-6">
@@ -147,14 +148,16 @@ export async function MainHeader() {
         </div>
       </div>
 
-      {/* Row 3: Main nav */}
-      <nav className="sticky top-0 z-30 bg-white/95 backdrop-blur border-t border-border">
+      </header>
+
+      {/* Row 3: Main nav — sticky; stays fixed at the top while scrolling */}
+      <nav className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-border">
         <ul className="max-w-container mx-auto px-6 flex items-center justify-center gap-10 py-0 text-[15px]">
           {tabs.map((tab) => (
             <NavTab key={tab.label} tab={tab} />
           ))}
         </ul>
       </nav>
-    </header>
+    </>
   );
 }
