@@ -4,17 +4,6 @@ import { ProductGrid } from '@/components/product/ProductGrid';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { getHeroBanners } from '@/lib/theme/getTheme';
 
-const COLLECTION_CIRCLES: { label: string; href: string; emoji: string }[] = [
-  { label: 'Бүгд', href: '/catalog/all', emoji: '✻' },
-  { label: 'Цэцэг', href: '/catalog/flowers', emoji: '🌸' },
-  { label: 'Letterbox', href: '/catalog/flowers?filter=letterbox', emoji: '✉️' },
-  { label: 'Hamper', href: '/catalog/gifts?filter=hamper', emoji: '🧺' },
-  { label: 'Пион', href: '/catalog/flowers', emoji: '🌷' },
-  { label: 'Карт', href: '/catalog/cards', emoji: '💌' },
-  { label: 'Ургамал', href: '/catalog/plants', emoji: '🪴' },
-  { label: 'Захиалгат', href: '/catalog/subs', emoji: '📦' },
-];
-
 export default async function HomePage() {
   const supabase = createClient();
   const [{ data: products }, heroConfig] = await Promise.all([
@@ -34,27 +23,6 @@ export default async function HomePage() {
         slides={heroConfig.slides}
         intervalMs={heroConfig.interval_ms}
       />
-
-      {/* Collection circles */}
-      <section className="border-b border-border">
-        <div className="max-w-container mx-auto px-6 py-10">
-          <ul className="flex items-start gap-8 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {COLLECTION_CIRCLES.map((c) => (
-              <li key={c.label} className="flex-shrink-0">
-                <Link
-                  href={c.href}
-                  className="flex flex-col items-center gap-2 group"
-                >
-                  <span className="w-20 h-20 rounded-full bg-lilac flex items-center justify-center text-3xl group-hover:bg-pinkHot/20 transition-colors">
-                    {c.emoji}
-                  </span>
-                  <span className="text-sm text-ink">{c.label}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
 
       {/* Bestsellers */}
       <section className="max-w-container mx-auto px-6 py-16">
