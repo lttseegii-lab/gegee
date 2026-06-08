@@ -32,8 +32,8 @@ export interface CreateOrderArgs {
  * - Inserts orders + order_items in a single round-trip
  * - Clears cart_items after successful order creation
  *
- * Sprint 4 follow-up: hand the orderId to QPay invoice creation
- * (apps/web/lib/qpay/createInvoice.ts) before redirecting to /checkout/payment.
+ * The returned orderId is handed to /checkout/payment, which creates the QPay
+ * invoice (lib/qpay/client.ts) and shows the QR.
  */
 export async function createOrderFromCart(
   args: CreateOrderArgs

@@ -4,11 +4,12 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 /**
- * Polls the QPay webhook endpoint every 3s to check if the order was paid.
- * Redirects to /checkout/success once the payment is confirmed.
+ * Polls the order status every 3s and redirects to /checkout/success once paid.
  *
- * On the server, the webhook endpoint queries QPay's payment_check API
- * (so it is authoritative and idempotent).
+ * Each tick reads our DB status (cheap, no QPay call). Every 5th tick (~15s) it
+ * forces a real QPay check as a fallback in case the QPay callback was missed or
+ * can't reach us (e.g. localhost without a public URL). QPay forbids hammering
+ * payment/check, so the real check stays infrequent and stops once paid.
  */
 export function PaymentPoller({
   orderId,
@@ -30,13 +31,14 @@ export function PaymentPoller({
     async function tick() {
       if (!active || attempts >= maxAttempts) return;
       attempts++;
+      const verify = attempts % 5 === 0 ? '&verify=1' : '';
       try {
-        const res = await fetch(`/api/qpay-webhook?orderId=${orderId}`, {
-          method: 'POST',
-          cache: 'no-store',
-        });
+        const res = await fetch(
+          `/api/qpay/status?orderId=${orderId}${verify}`,
+          { cache: 'no-store' }
+        );
         const data = await res.json();
-        if (data?.ok && (data.payment_id || data.already_paid)) {
+        if (data?.paid) {
           active = false;
           router.push(`/checkout/success?orderCode=${orderCode}`);
           return;

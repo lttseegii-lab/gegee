@@ -13,7 +13,7 @@ export default function CheckoutSuccessPage({
     <main className="max-w-md mx-auto px-6 py-24 text-center">
       <div className="text-6xl mb-6">🌸</div>
       <h1 className="font-serif italic text-3xl mb-3">Баярлалаа!</h1>
-      <p className="text-ink/70 mb-2">Таны захиалга амжилттай үүслээ.</p>
+      <p className="text-ink/70 mb-2">Төлбөр амжилттай хийгдэж, захиалга баталгаажлаа.</p>
       {code && (
         <p className="text-sm text-ink/50 mb-8">
           Захиалгын дугаар: <span className="font-mono text-ink">{code}</span>
@@ -21,8 +21,8 @@ export default function CheckoutSuccessPage({
       )}
 
       <div className="bg-mint/30 rounded-card p-5 mb-8 text-sm text-ink/80">
-        💡 <strong>Дараагийн алхам:</strong> Sprint 4-ийн QPay интеграц
-        нэмэгдмэгц энэ хуудаснаас шууд QR scan хийж төлбөр төлөх боломжтой болно.
+        💐 <strong>Дараагийн алхам:</strong> Бид таны цэцгийг бэлтгэж эхэллээ.
+        Хүргэлтийн явцыг «Захиалгуудаа харах» хэсгээс хянах боломжтой.
       </div>
 
       <div className="space-y-3">

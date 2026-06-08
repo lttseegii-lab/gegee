@@ -359,6 +359,31 @@ export default async function AdminOrderDetail({
                   </div>
                 </div>
               )}
+              {(() => {
+                const eb = order.qpay_ebarimt as {
+                  lottery?: string;
+                  status?: string;
+                  receipt_id?: string;
+                } | null;
+                if (!eb) return null;
+                return (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <div className="text-ink/40 uppercase text-[10px] mb-0.5">
+                      Э-баримт{eb.status ? ` · ${eb.status}` : ''}
+                    </div>
+                    {eb.lottery && (
+                      <div className="font-mono text-ink/80">
+                        Сугалаа: {eb.lottery}
+                      </div>
+                    )}
+                    {eb.receipt_id && (
+                      <div className="font-mono text-ink/60 break-all text-[10px] mt-0.5">
+                        {eb.receipt_id}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </section>
           )}
 

@@ -258,6 +258,8 @@ export type Database = {
           order_code: string | null
           paid_at: string | null
           prep_photo_url: string | null
+          qpay_ebarimt: Json | null
+          qpay_invoice: Json | null
           qpay_invoice_id: string | null
           qpay_payment_id: string | null
           recipient_phone: string | null
@@ -282,6 +284,8 @@ export type Database = {
           order_code?: string | null
           paid_at?: string | null
           prep_photo_url?: string | null
+          qpay_ebarimt?: Json | null
+          qpay_invoice?: Json | null
           qpay_invoice_id?: string | null
           qpay_payment_id?: string | null
           recipient_phone?: string | null
@@ -306,6 +310,8 @@ export type Database = {
           order_code?: string | null
           paid_at?: string | null
           prep_photo_url?: string | null
+          qpay_ebarimt?: Json | null
+          qpay_invoice?: Json | null
           qpay_invoice_id?: string | null
           qpay_payment_id?: string | null
           recipient_phone?: string | null
@@ -464,6 +470,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      qpay_token: {
+        Row: {
+          access_token: string
+          expires_at: string
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          expires_at: string
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          expires_at?: string
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       site_settings: {
         Row: {
