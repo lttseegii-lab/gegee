@@ -1,8 +1,10 @@
 import { DiyBuilder } from '@/components/diy/DiyBuilder';
+import { getDiyCatalog } from '@/lib/diy/getDiyCatalog';
 
 export const metadata = { title: 'Өөрийн гараар' };
 
-export default function DiyPage() {
+export default async function DiyPage() {
+  const { flowers, wraps } = await getDiyCatalog();
   return (
     <main className="max-w-container mx-auto px-6 py-10">
       <header className="mb-10 max-w-2xl">
@@ -18,7 +20,7 @@ export default function DiyPage() {
         </p>
       </header>
 
-      <DiyBuilder />
+      <DiyBuilder flowers={flowers} wraps={wraps} />
     </main>
   );
 }

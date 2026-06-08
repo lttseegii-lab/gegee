@@ -11,6 +11,8 @@ export interface DiyFlower {
   promptFragment: string;
   /** Hex color used for swatch + dust */
   color: string;
+  /** Optional real photo (admin upload). Falls back to emoji + color. */
+  image_url?: string;
 }
 
 export const DIY_FLOWERS: DiyFlower[] = [
@@ -130,4 +132,53 @@ export function flowerSubtotal(selections: FlowerSelection[]): number {
 
 export function totalStems(selections: FlowerSelection[]): number {
   return selections.reduce((sum, s) => sum + s.qty, 0);
+}
+
+/** Build a key→flower lookup from any flower list (admin-managed or default). */
+export function diyFlowersByKey(
+  flowers: DiyFlower[]
+): Record<string, DiyFlower> {
+  return Object.fromEntries(flowers.map((f) => [f.key, f]));
+}
+
+/**
+ * Validate + normalize an admin-managed DIY flower list (stored as JSON in
+ * site_settings.diy_flowers). Returns a clean list, or [] when the input is
+ * unusable so callers can fall back to DIY_FLOWERS.
+ */
+export function sanitizeDiyFlowers(raw: unknown): DiyFlower[] {
+  if (!Array.isArray(raw)) return [];
+  const out: DiyFlower[] = [];
+  const seen = new Set<string>();
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const o = item as Record<string, unknown>;
+    const key = typeof o.key === 'string' ? o.key.trim().slice(0, 40) : '';
+    const name = typeof o.name === 'string' ? o.name.trim().slice(0, 40) : '';
+    if (!key || !name || seen.has(key)) continue;
+    seen.add(key);
+    const price =
+      typeof o.price === 'number' && Number.isFinite(o.price)
+        ? Math.max(0, Math.min(1_000_000, Math.round(o.price)))
+        : 0;
+    const emoji =
+      typeof o.emoji === 'string' && o.emoji.trim()
+        ? o.emoji.trim().slice(0, 8)
+        : '🌸';
+    const color =
+      typeof o.color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(o.color.trim())
+        ? o.color.trim()
+        : '#f5c6d0';
+    const promptFragment =
+      typeof o.promptFragment === 'string'
+        ? o.promptFragment.trim().slice(0, 100)
+        : name;
+    const imgRaw = typeof o.image_url === 'string' ? o.image_url.trim() : '';
+    const image_url =
+      imgRaw && (imgRaw.startsWith('http://') || imgRaw.startsWith('https://'))
+        ? imgRaw.slice(0, 500)
+        : undefined;
+    out.push({ key, name, emoji, price, promptFragment, color, image_url });
+  }
+  return out;
 }

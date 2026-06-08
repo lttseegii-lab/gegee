@@ -1,24 +1,31 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { StepFlowers } from './StepFlowers';
 import { StepWrap } from './StepWrap';
 import { StepGenerate } from './StepGenerate';
 import { calculatePrice } from '@/lib/diy/pricing';
 import {
-  DIY_FLOWERS_BY_KEY,
+  diyFlowersByKey,
   totalStems,
+  type DiyFlower,
   type FlowerSelection,
 } from '@/lib/diy/flowers';
-import { DIY_WRAPS_BY_KEY } from '@/lib/diy/wraps';
+import { diyWrapsByKey, type DiyWrap } from '@/lib/diy/wraps';
 import type { DiyVariant } from '@/lib/diy/aiGen';
 import { createDiyAndAddToCart } from '@/app/(shop)/diy/actions';
 import { useCartStore } from '@/stores/cartStore';
 
 type Step = 1 | 2 | 3;
 
-export function DiyBuilder() {
+export function DiyBuilder({
+  flowers,
+  wraps,
+}: {
+  flowers: DiyFlower[];
+  wraps: DiyWrap[];
+}) {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [selections, setSelections] = useState<FlowerSelection[]>([]);
@@ -29,8 +36,11 @@ export function DiyBuilder() {
   const [isPending, startTransition] = useTransition();
   const openCart = useCartStore((s) => s.open);
 
+  const flowersByKey = useMemo(() => diyFlowersByKey(flowers), [flowers]);
+  const wrapsByKey = useMemo(() => diyWrapsByKey(wraps), [wraps]);
+
   const stems = totalStems(selections);
-  const pricing = calculatePrice(selections, wrapKey);
+  const pricing = calculatePrice(selections, wrapKey, flowersByKey, wrapsByKey);
 
   const canGoStep2 = stems > 0;
   const canGoStep3 = canGoStep2 && wrapKey !== null;
@@ -106,13 +116,19 @@ export function DiyBuilder() {
         </ol>
 
         {step === 1 && (
-          <StepFlowers selections={selections} onChange={setSelections} />
+          <StepFlowers
+            flowers={flowers}
+            selections={selections}
+            onChange={setSelections}
+          />
         )}
         {step === 2 && (
-          <StepWrap selected={wrapKey} onChange={setWrapKey} />
+          <StepWrap wraps={wraps} selected={wrapKey} onChange={setWrapKey} />
         )}
         {step === 3 && (
           <StepGenerate
+            flowersByKey={flowersByKey}
+            wrapsByKey={wrapsByKey}
             selections={selections}
             wrapKey={wrapKey}
             selectedVariant={variant?.key ?? null}
@@ -171,7 +187,7 @@ export function DiyBuilder() {
         ) : (
           <ul className="space-y-1.5 mb-4 text-sm">
             {selections.map((s) => {
-              const f = DIY_FLOWERS_BY_KEY[s.key];
+              const f = flowersByKey[s.key];
               if (!f) return null;
               return (
                 <li
@@ -188,11 +204,10 @@ export function DiyBuilder() {
           </ul>
         )}
 
-        {wrapKey && (
+        {wrapKey && wrapsByKey[wrapKey] && (
           <div className="text-sm text-ink/70 flex justify-between mb-3 pb-3 border-b border-border">
             <span>
-              {DIY_WRAPS_BY_KEY[wrapKey].emoji}{' '}
-              {DIY_WRAPS_BY_KEY[wrapKey].name}
+              {wrapsByKey[wrapKey].emoji} {wrapsByKey[wrapKey].name}
             </span>
             <span>+{pricing.wrap.toLocaleString()}₮</span>
           </div>

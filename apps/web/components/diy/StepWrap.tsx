@@ -1,13 +1,14 @@
 'use client';
 
-import { DIY_WRAPS } from '@/lib/diy/wraps';
+import { type DiyWrap } from '@/lib/diy/wraps';
 
 interface Props {
+  wraps: DiyWrap[];
   selected: string | null;
   onChange: (key: string) => void;
 }
 
-export function StepWrap({ selected, onChange }: Props) {
+export function StepWrap({ wraps, selected, onChange }: Props) {
   return (
     <div>
       <div className="mb-6">
@@ -18,7 +19,7 @@ export function StepWrap({ selected, onChange }: Props) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {DIY_WRAPS.map((w) => {
+        {wraps.map((w) => {
           const active = selected === w.key;
           return (
             <button

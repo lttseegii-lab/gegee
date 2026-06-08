@@ -4,11 +4,8 @@
 // 3 variants by changing the style adjective + random seed.
 
 import { aiImageUrl } from '@/lib/ai/pollinations';
-import {
-  DIY_FLOWERS_BY_KEY,
-  type FlowerSelection,
-} from './flowers';
-import { DIY_WRAPS_BY_KEY } from './wraps';
+import { type FlowerSelection, type DiyFlower } from './flowers';
+import { type DiyWrap } from './wraps';
 
 export interface DiyVariant {
   /** Unique key for selection */
@@ -45,19 +42,21 @@ const VARIANTS: { key: string; name: string; promptPrefix: string }[] = [
 function buildPrompt(
   selections: FlowerSelection[],
   wrapKey: string | null,
-  prefix: string
+  prefix: string,
+  flowersByKey: Record<string, DiyFlower>,
+  wrapsByKey: Record<string, DiyWrap>
 ): string {
   const flowerStr = selections
     .filter((s) => s.qty > 0)
     .map((s) => {
-      const f = DIY_FLOWERS_BY_KEY[s.key];
+      const f = flowersByKey[s.key];
       if (!f) return '';
       return `${s.qty} ${f.promptFragment}`;
     })
     .filter(Boolean)
     .join(', ');
 
-  const wrap = wrapKey ? DIY_WRAPS_BY_KEY[wrapKey] : null;
+  const wrap = wrapKey ? wrapsByKey[wrapKey] : null;
   const wrapPart = wrap ? wrap.promptFragment : 'wrapped in kraft paper';
 
   return `${prefix} ${flowerStr}, ${wrapPart}, lifestyle photography, soft natural light, square composition, white background`;
@@ -86,10 +85,18 @@ function seedFor(
 
 export function generateVariants(
   selections: FlowerSelection[],
-  wrapKey: string | null
+  wrapKey: string | null,
+  flowersByKey: Record<string, DiyFlower>,
+  wrapsByKey: Record<string, DiyWrap>
 ): DiyVariant[] {
   return VARIANTS.map((variant, i) => {
-    const prompt = buildPrompt(selections, wrapKey, variant.promptPrefix);
+    const prompt = buildPrompt(
+      selections,
+      wrapKey,
+      variant.promptPrefix,
+      flowersByKey,
+      wrapsByKey
+    );
     const seed = seedFor(selections, wrapKey, i);
     return {
       key: variant.key,

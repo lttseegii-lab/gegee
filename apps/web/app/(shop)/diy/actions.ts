@@ -2,12 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
-import {
-  DIY_FLOWERS_BY_KEY,
-  type FlowerSelection,
-} from '@/lib/diy/flowers';
-import { DIY_WRAPS_BY_KEY } from '@/lib/diy/wraps';
+import { diyFlowersByKey, type FlowerSelection } from '@/lib/diy/flowers';
+import { diyWrapsByKey } from '@/lib/diy/wraps';
 import { calculatePrice } from '@/lib/diy/pricing';
+import { getDiyFlowers, getDiyWraps } from '@/lib/diy/getDiyCatalog';
 
 export interface CreateDiyInput {
   selections: FlowerSelection[];
@@ -37,19 +35,33 @@ export async function createDiyAndAddToCart(
   if (!input.selections || input.selections.length === 0) {
     return { ok: false, error: 'Цэцгийг сонгоно уу' };
   }
+
+  // Load the admin-managed catalog for authoritative validation + pricing.
+  const [flowersList, wrapsList] = await Promise.all([
+    getDiyFlowers(),
+    getDiyWraps(),
+  ]);
+  const flowersByKey = diyFlowersByKey(flowersList);
+  const wrapsByKey = diyWrapsByKey(wrapsList);
+
   for (const s of input.selections) {
-    if (!DIY_FLOWERS_BY_KEY[s.key]) {
+    if (!flowersByKey[s.key]) {
       return { ok: false, error: `Тодорхойгүй цэцэг: ${s.key}` };
     }
     if (s.qty < 0 || s.qty > 50) {
       return { ok: false, error: 'Тоо хэмжээ буруу' };
     }
   }
-  if (input.wrapKey && !DIY_WRAPS_BY_KEY[input.wrapKey]) {
+  if (input.wrapKey && !wrapsByKey[input.wrapKey]) {
     return { ok: false, error: 'Боолт олдсонгүй' };
   }
 
-  const pricing = calculatePrice(input.selections, input.wrapKey);
+  const pricing = calculatePrice(
+    input.selections,
+    input.wrapKey,
+    flowersByKey,
+    wrapsByKey
+  );
   if (pricing.total <= 0) {
     return { ok: false, error: 'Үнэ тооцох боломжгүй' };
   }
@@ -67,11 +79,11 @@ export async function createDiyAndAddToCart(
   // Build a human-readable description from selections
   const flowerSummary = input.selections
     .filter((s) => s.qty > 0)
-    .map((s) => `${s.qty}× ${DIY_FLOWERS_BY_KEY[s.key].name}`)
+    .map((s) => `${s.qty}× ${flowersByKey[s.key].name}`)
     .join(', ');
 
   const wrapName = input.wrapKey
-    ? DIY_WRAPS_BY_KEY[input.wrapKey].name
+    ? wrapsByKey[input.wrapKey].name
     : 'Боолтгүй';
 
   const customName =

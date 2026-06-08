@@ -3,9 +3,12 @@
 import Image from 'next/image';
 import { useMemo } from 'react';
 import { generateVariants, type DiyVariant } from '@/lib/diy/aiGen';
-import type { FlowerSelection } from '@/lib/diy/flowers';
+import type { FlowerSelection, DiyFlower } from '@/lib/diy/flowers';
+import type { DiyWrap } from '@/lib/diy/wraps';
 
 interface Props {
+  flowersByKey: Record<string, DiyFlower>;
+  wrapsByKey: Record<string, DiyWrap>;
   selections: FlowerSelection[];
   wrapKey: string | null;
   selectedVariant: string | null;
@@ -13,14 +16,16 @@ interface Props {
 }
 
 export function StepGenerate({
+  flowersByKey,
+  wrapsByKey,
   selections,
   wrapKey,
   selectedVariant,
   onSelectVariant,
 }: Props) {
   const variants = useMemo(
-    () => generateVariants(selections, wrapKey),
-    [selections, wrapKey]
+    () => generateVariants(selections, wrapKey, flowersByKey, wrapsByKey),
+    [selections, wrapKey, flowersByKey, wrapsByKey]
   );
 
   return (

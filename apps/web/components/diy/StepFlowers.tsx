@@ -1,13 +1,14 @@
 'use client';
 
-import { DIY_FLOWERS, type FlowerSelection } from '@/lib/diy/flowers';
+import { type FlowerSelection, type DiyFlower } from '@/lib/diy/flowers';
 
 interface Props {
+  flowers: DiyFlower[];
   selections: FlowerSelection[];
   onChange: (selections: FlowerSelection[]) => void;
 }
 
-export function StepFlowers({ selections, onChange }: Props) {
+export function StepFlowers({ flowers, selections, onChange }: Props) {
   const map = new Map(selections.map((s) => [s.key, s.qty]));
 
   function setQty(key: string, qty: number) {
@@ -31,7 +32,7 @@ export function StepFlowers({ selections, onChange }: Props) {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        {DIY_FLOWERS.map((f) => {
+        {flowers.map((f) => {
           const qty = map.get(f.key) ?? 0;
           const active = qty > 0;
           return (
@@ -44,10 +45,19 @@ export function StepFlowers({ selections, onChange }: Props) {
               }`}
             >
               <div
-                className="aspect-square rounded-lg mb-3 flex items-center justify-center text-4xl"
+                className="aspect-square rounded-lg mb-3 flex items-center justify-center text-4xl overflow-hidden"
                 style={{ background: f.color + '30' }}
               >
-                {f.emoji}
+                {f.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={f.image_url}
+                    alt={f.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  f.emoji
+                )}
               </div>
               <div className="font-medium text-sm mb-0.5">{f.name}</div>
               <div className="text-[11px] text-ink/50 mb-3">
