@@ -274,8 +274,8 @@ function DoneStep({
 
       {flower ? (
         <p className="text-ink/70 mb-10 leading-relaxed">
-          Та <strong>{flower.label}</strong>-д дуртай юм байна. Бид танай
-          гэртээ түүнтэй төстэй цэцэг онцлоход бэлэн.
+          Нандин мөчүүдээ бидэнд даатгасанд баярлалаа. Цэцэгчин найзууд нь
+          хичээх болно.
         </p>
       ) : m ? (
         <p className="text-ink/70 mb-10 leading-relaxed">
