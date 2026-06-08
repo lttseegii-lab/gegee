@@ -49,7 +49,7 @@ export default async function HomePage() {
               ✻ Мартаж болохгүй өдрүүд
             </p>
             <h2 className="font-serif italic text-3xl mb-3">
-              Хайртай хүмүүсийнхээ <em>чухал огноог</em> мартахгүй
+              Хайртай хүмүүсийнхээ <em>чухал өдрийг</em> битгий мартаарай
             </h2>
             <p className="text-ink/70 max-w-md">
               Ээжийн өдөр, ой тэмдэглэл, төрсөн өдөр — бид цаг тутамд сануулж,
@@ -57,7 +57,7 @@ export default async function HomePage() {
             </p>
           </div>
           <Link href="/account/memory-garden" className="btn-primary whitespace-nowrap">
-            Огноо нэмэх →
+            Чухал өдөр нэмэх →
           </Link>
         </div>
       </section>
