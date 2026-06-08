@@ -105,11 +105,16 @@ export async function MainHeader() {
       {/* Row 2: Logo + Search + Account */}
       <div className="py-4">
         <div className="max-w-container mx-auto px-6 grid grid-cols-[auto_1fr_auto] gap-10 items-center">
-          <Link
-            href="/"
-            className="font-serif italic text-[28px] leading-none text-ink no-underline"
-          >
-            Gegeen<span className="font-light"> ✻</span>
+          <Link href="/" className="inline-block" aria-label="Gegeen">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.svg"
+              alt="Gegeen"
+              width={56}
+              height={64}
+              style={{ width: 56, height: 64 }}
+              className="max-w-none object-contain"
+            />
           </Link>
 
           <div className="hidden md:flex">
