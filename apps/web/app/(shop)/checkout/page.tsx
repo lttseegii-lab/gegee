@@ -11,7 +11,7 @@ import {
 import { UpsellList } from '@/components/checkout/UpsellList';
 import { CardMessageEditor } from '@/components/checkout/CardMessageEditor';
 import { productImageUrl } from '@/lib/ai/pollinations';
-import { FREE_DELIVERY_THRESHOLD, DELIVERY_FEE } from '@/stores/cartStore';
+import { FREE_DELIVERY_THRESHOLD, DELIVERY_FEE } from '@/lib/delivery';
 
 export const metadata = { title: 'Захиалах' };
 

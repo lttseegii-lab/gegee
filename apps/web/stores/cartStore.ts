@@ -207,9 +207,11 @@ export function calcSubtotal(
   }, 0);
 }
 
-export const FREE_DELIVERY_THRESHOLD = 100_000;
-export const DELIVERY_FEE = 8_000;
-
-export function calcDelivery(subtotal: number): number {
-  return subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
-}
+// Re-exported from the plain (non-'use client') module so client components
+// that import these from the cart store keep working. Server code must import
+// from '@/lib/delivery' directly (see lib/delivery.ts for why).
+export {
+  FREE_DELIVERY_THRESHOLD,
+  DELIVERY_FEE,
+  calcDelivery,
+} from '@/lib/delivery';

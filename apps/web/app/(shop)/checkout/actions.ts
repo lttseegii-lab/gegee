@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { FREE_DELIVERY_THRESHOLD, DELIVERY_FEE } from '@/stores/cartStore';
+import { FREE_DELIVERY_THRESHOLD, DELIVERY_FEE } from '@/lib/delivery';
 
 export interface CreateOrderResult {
   ok: boolean;
