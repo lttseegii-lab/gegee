@@ -31,7 +31,7 @@ export async function generateMetadata({
   if (!cfg) return { title: 'Catalog' };
   return {
     title: cfg.title,
-    description: cfg.description ?? `Gegeen — ${cfg.title}`,
+    description: cfg.description ?? `Thanks — ${cfg.title}`,
   };
 }
 

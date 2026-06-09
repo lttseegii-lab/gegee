@@ -21,7 +21,7 @@ export default function LoginPage() {
     <main className="max-w-md mx-auto px-6 py-20">
       <h1 className="font-serif italic text-4xl mb-2 text-center">Нэвтрэх</h1>
       <p className="text-ink/60 text-sm text-center mb-10">
-        Gegeen-д тавтай морилно уу
+        Thanks-д тавтай морилно уу
       </p>
 
       {ANY_OAUTH_ENABLED && (

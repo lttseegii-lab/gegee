@@ -29,7 +29,7 @@ export function SiteFooter() {
       <div className="max-w-container mx-auto px-6 py-16 grid lg:grid-cols-[2fr_1fr_1fr_1fr] gap-12">
         <div>
           <div className="font-serif italic text-2xl mb-2">
-            Gegeen <span className="text-pinkHot">✻</span>
+            Thanks <span className="text-pinkHot">✻</span>
           </div>
           <p className="text-sm text-ink/60 max-w-sm">
             Мэдрэхүйг ойлгодог цэцгийн худалдаа. Care wildly.
@@ -62,7 +62,7 @@ export function SiteFooter() {
 
       <div className="border-t border-border">
         <div className="max-w-container mx-auto px-6 py-6 flex flex-wrap items-center justify-between gap-4 text-xs text-ink/50">
-          <span>© 2026 Gegeen. Бүх эрх хуулиар хамгаалагдсан.</span>
+          <span>© 2026 Thanks. Бүх эрх хуулиар хамгаалагдсан.</span>
           <div className="flex gap-4">
             <Link href="/legal/privacy" className="hover:text-ink">
               Privacy

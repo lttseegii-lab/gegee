@@ -23,7 +23,7 @@ export default async function OnboardingLayout({
             href="/"
             className="font-serif italic text-[24px] leading-none text-ink no-underline"
           >
-            Gegeen<span className="font-light"> ✻</span>
+            Thanks<span className="font-light"> ✻</span>
           </Link>
         </div>
       </header>

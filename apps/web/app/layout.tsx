@@ -3,8 +3,8 @@ import '@/styles/globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Gegeen ✻',
-    template: '%s · Gegeen',
+    default: 'Thanks ✻',
+    template: '%s · Thanks',
   },
   description:
     'Mongolian florist. Curated bouquets, letterbox flowers, subscriptions, and gifts.',
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
   ),
   openGraph: {
-    title: 'Gegeen ✻',
+    title: 'Thanks ✻',
     description: 'Mongolian florist with curated bouquets.',
     type: 'website',
     locale: 'mn_MN',

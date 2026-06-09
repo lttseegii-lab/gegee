@@ -21,7 +21,7 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
     <aside className="w-60 bg-white border-r border-border flex-shrink-0 min-h-screen sticky top-0">
       <div className="p-5 border-b border-border">
         <Link href="/" className="font-serif italic text-xl">
-          Gegeen <span className="text-pinkHot">✻</span>
+          Thanks <span className="text-pinkHot">✻</span>
         </Link>
         <div className="text-[11px] uppercase tracking-wider text-ink/40 mt-1">
           Backoffice

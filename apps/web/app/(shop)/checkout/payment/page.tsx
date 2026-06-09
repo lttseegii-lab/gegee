@@ -87,7 +87,7 @@ export default async function PaymentPage({
         const invoice = await createInvoice({
           senderInvoiceNo: String(order.id),
           amount: order.total,
-          description: `Gegeen захиалга ${order.order_code}`,
+          description: `Thanks захиалга ${order.order_code}`,
           callbackUrl: `${SITE_URL}/api/qpay-webhook?orderId=${order.id}`,
         });
 
