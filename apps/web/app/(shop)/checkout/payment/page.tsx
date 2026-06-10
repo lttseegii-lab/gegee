@@ -174,16 +174,27 @@ export default async function PaymentPage({
           {invoiceData.urls && invoiceData.urls.length > 0 && (
             <div className="mb-6">
               <p className="text-xs uppercase tracking-wider text-ink/40 mb-3">
-                Эсвэл шууд аппаар нээх
+                Эсвэл банкны аппаа сонгож нээх
               </p>
-              <div className="grid grid-cols-3 gap-2">
-                {invoiceData.urls.slice(0, 6).map((u) => (
+              <div className="grid grid-cols-4 gap-2">
+                {invoiceData.urls.map((u) => (
                   <a
                     key={u.name}
                     href={u.link}
-                    className="border border-border rounded-lg p-2 text-xs hover:border-ink"
+                    className="flex flex-col items-center gap-1.5 rounded-lg border border-border p-2 hover:border-ink transition-colors"
                   >
-                    {u.name}
+                    {/* QPay-hosted official bank/wallet logo. Plain <img> avoids
+                        configuring next/image remotePatterns for qpay.mn + s3.qpay.mn. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={u.logo}
+                      alt={u.description || u.name}
+                      className="h-9 w-9 rounded-lg object-contain bg-white"
+                      loading="lazy"
+                    />
+                    <span className="text-[10px] leading-tight text-center text-ink/70 line-clamp-2">
+                      {u.description || u.name}
+                    </span>
                   </a>
                 ))}
               </div>
