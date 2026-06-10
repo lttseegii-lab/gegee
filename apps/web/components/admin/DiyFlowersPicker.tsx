@@ -211,7 +211,7 @@ function FlowerRow({
           className="w-full h-9 rounded border border-border"
         />
       </Field>
-      <Field label="AI prompt (англиар)" className="flex-1 min-w-[160px]">
+      <Field label="AI prompt (англиар)" className="flex-1 min-w-0 w-full sm:w-auto sm:min-w-[160px]">
         <input
           value={flower.promptFragment}
           onChange={(e) => onChange({ promptFragment: e.target.value })}

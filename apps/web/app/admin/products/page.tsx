@@ -26,7 +26,7 @@ export default async function AdminProductsPage({
   const active = (products ?? []).filter((p) => p.active).length;
 
   return (
-    <div className="p-8 max-w-7xl">
+    <div className="p-4 sm:p-8 max-w-7xl">
       <header className="flex items-start justify-between mb-8">
         <div>
           <h1 className="font-serif italic text-4xl">Бүтээгдэхүүн</h1>
@@ -64,8 +64,8 @@ export default async function AdminProductsPage({
         )}
       </form>
 
-      <div className="bg-white border border-border rounded-card overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white border border-border rounded-card overflow-x-auto">
+        <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-offwhite text-xs uppercase tracking-wider text-ink/60">
             <tr>
               <th className="text-left px-5 py-3 w-16"></th>

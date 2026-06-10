@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { productImageUrl } from '@/lib/ai/pollinations';
 import { AddToCartButton } from '@/components/cart/AddToCartButton';
+import { HeartButton } from '@/components/product/HeartButton';
 
 export async function generateMetadata({
   params,
@@ -88,13 +89,7 @@ export default async function ProductDetailPage({
 
           <div className="flex items-center gap-4 mb-10">
             <AddToCartButton productId={product.id} variant="full" />
-            <button
-              className="w-12 h-12 border border-border rounded-full text-ink hover:border-ink"
-              aria-label="Хадгалах"
-              type="button"
-            >
-              ♡
-            </button>
+            <HeartButton productId={product.id} size="lg" />
           </div>
 
           {(product.tags?.length ?? 0) > 0 && (

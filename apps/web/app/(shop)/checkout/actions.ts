@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { FREE_DELIVERY_THRESHOLD, DELIVERY_FEE } from '@/lib/delivery';
+import type { Json } from '@/types/database';
 
 export interface CreateOrderResult {
   ok: boolean;
@@ -28,9 +28,12 @@ export interface CreateOrderArgs {
 
 /**
  * Creates an order from the user's current cart.
- * - Validates cart contents against current product prices
- * - Inserts orders + order_items in a single round-trip
- * - Clears cart_items after successful order creation
+ *
+ * All money math, delivery-date validation, capacity enforcement, and the
+ * order + order_items insert + cart clear happen ATOMICALLY inside the
+ * `create_order_from_cart` SECURITY DEFINER function (migration 0021). The
+ * client never supplies a price or total — they are recomputed server-side
+ * from live product prices, so a tampered payload cannot underpay.
  *
  * The returned orderId is handed to /checkout/payment, which creates the QPay
  * invoice (lib/qpay/client.ts) and shows the QR.
@@ -38,127 +41,62 @@ export interface CreateOrderArgs {
 export async function createOrderFromCart(
   args: CreateOrderArgs
 ): Promise<CreateOrderResult> {
-  const { addressId, notes, cardMessage, delivery } = args;
+  const { addressId: rawAddressId, notes, cardMessage, delivery } = args;
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: 'Нэвтэрнэ үү' };
 
-  // 1) Verify address belongs to user
-  const { data: address } = await supabase
-    .from('addresses')
-    .select('id')
-    .eq('id', addressId)
-    .eq('user_id', user.id)
-    .single();
-  if (!address) return { ok: false, error: 'Хаяг олдсонгүй' };
-
-  // 2) Fetch cart items
-  const { data: cartItems } = await supabase
-    .from('cart_items')
-    .select('product_id, qty')
-    .eq('user_id', user.id);
-  if (!cartItems || cartItems.length === 0) {
-    return { ok: false, error: 'Сагс хоосон' };
-  }
-
-  // 3) Snapshot current product prices
-  const productIds = cartItems.map((c) => c.product_id);
-  const { data: products } = await supabase
-    .from('products')
-    .select('id, name, price, active')
-    .in('id', productIds);
-  if (!products || products.length === 0) {
-    return { ok: false, error: 'Бүтээгдэхүүн олдсонгүй' };
-  }
-
-  // Validate all products still active
-  for (const ci of cartItems) {
-    const p = products.find((p) => p.id === ci.product_id);
-    if (!p || !p.active) {
-      return { ok: false, error: `Бүтээгдэхүүн идэвхгүй болсон: ${ci.product_id}` };
-    }
-  }
-
-  // 4) Calculate totals
-  const lineItems = cartItems.map((ci) => {
-    const p = products.find((p) => p.id === ci.product_id)!;
-    return {
-      product_id: ci.product_id,
-      qty: ci.qty,
-      unit_price: p.price,
-      line_total: p.price * ci.qty,
-    };
-  });
-  const subtotal = lineItems.reduce((sum, li) => sum + li.line_total, 0);
-  const delivery_fee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
-  const total = subtotal + delivery_fee;
-
-  // 4.5) Reserve capacity for the requested delivery date (default today)
-  const deliveryDate =
-    delivery?.date ?? new Date().toISOString().slice(0, 10);
-  const { data: reserved, error: capErr } = await supabase.rpc(
-    'try_reserve_capacity',
-    { target_date: deliveryDate }
-  );
-  if (capErr) {
-    console.warn('Capacity reserve error (non-fatal):', capErr.message);
-  } else if (reserved === false) {
+  // Defend against a malformed client payload before it reaches Postgres.
+  const addressId = Number(rawAddressId);
+  if (!Number.isInteger(addressId) || addressId <= 0) {
     return {
       ok: false,
-      error:
-        'Сонгосон өдрийн захиалгын хязгаар дүүрсэн байна. Өөр өдөр сонгоно уу.',
+      error: 'Хүргэлтийн хаяг буруу байна. Хаягаа дахин сонгоно уу.',
     };
   }
 
-  // 5) Insert order
-  const { data: order, error: orderErr } = await supabase
-    .from('orders')
-    .insert({
-      user_id: user.id,
-      address_id: addressId,
-      subtotal,
-      delivery_fee,
-      total,
-      notes: notes ?? null,
-      card_message: cardMessage?.trim() || null,
-      status: 'pending_payment',
-      delivery_date: deliveryDate,
-      delivery_slot: delivery?.slot ?? null,
-      is_surprise: delivery?.is_surprise ?? false,
-      recipient_phone: delivery?.recipient_phone?.trim() || null,
-    })
-    .select('id, order_code, total')
-    .single();
-  if (orderErr || !order) {
-    console.error('Order insert failed', orderErr);
-    return { ok: false, error: orderErr?.message ?? 'Захиалга үүсгэхэд алдаа гарлаа' };
+  const { data, error } = await supabase.rpc('create_order_from_cart', {
+    p_address_id: addressId,
+    p_notes: notes ?? null,
+    p_card_message: cardMessage ?? null,
+    p_delivery: delivery ? (delivery as unknown as Json) : null,
+  });
+
+  if (error) {
+    const msg = error.message ?? '';
+    if (msg.includes('CAPACITY_FULL') || msg.includes('CAPACITY_CLOSED')) {
+      return {
+        ok: false,
+        error:
+          'Сонгосон өдрийн захиалгын хязгаар дүүрсэн байна. Өөр өдөр сонгоно уу.',
+      };
+    }
+    if (msg.includes('Cart is empty')) return { ok: false, error: 'Сагс хоосон' };
+    if (msg.includes('Address not found')) return { ok: false, error: 'Хаяг олдсонгүй' };
+    if (msg.includes('no longer available')) {
+      return {
+        ok: false,
+        error: 'Сагсан дахь бараа идэвхгүй болсон байна. Сагсаа шинэчилнэ үү.',
+      };
+    }
+    if (msg.includes('Invalid delivery')) {
+      return { ok: false, error: 'Хүргэлтийн огноо эсвэл цаг буруу байна.' };
+    }
+    console.error('create_order_from_cart failed:', error.message);
+    return { ok: false, error: 'Захиалга үүсгэхэд алдаа гарлаа' };
   }
 
-  // 6) Insert order_items
-  const { error: itemsErr } = await supabase.from('order_items').insert(
-    lineItems.map((li) => ({
-      order_id: order.id,
-      product_id: li.product_id,
-      qty: li.qty,
-      unit_price: li.unit_price,
-    }))
-  );
-  if (itemsErr) {
-    console.error('Order items insert failed', itemsErr);
-    // Best-effort rollback
-    await supabase.from('orders').delete().eq('id', order.id);
-    return { ok: false, error: itemsErr.message };
-  }
-
-  // 7) Clear cart
-  await supabase.from('cart_items').delete().eq('user_id', user.id);
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return { ok: false, error: 'Захиалга үүсгэхэд алдаа гарлаа' };
 
   revalidatePath('/account/orders');
 
   return {
     ok: true,
-    orderId: order.id,
-    orderCode: order.order_code ?? undefined,
-    total: order.total,
+    orderId: row.order_id,
+    orderCode: row.order_code ?? undefined,
+    total: row.total,
   };
 }

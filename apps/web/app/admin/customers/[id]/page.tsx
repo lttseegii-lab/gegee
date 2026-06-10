@@ -74,7 +74,7 @@ export default async function CustomerDetailPage({
       : 0;
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-8 max-w-5xl">
       <nav className="text-[13px] text-ink/60 mb-4 flex items-center gap-2">
         <Link href="/admin/customers" className="hover:text-ink">Хэрэглэгчид</Link>
         <span className="text-ink/30">›</span>
@@ -134,8 +134,8 @@ export default async function CustomerDetailPage({
             Захиалга байхгүй
           </div>
         ) : (
-          <div className="bg-white border border-border rounded-card overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="bg-white border border-border rounded-card overflow-x-auto">
+            <table className="w-full min-w-[560px] text-sm">
               <thead className="bg-offwhite text-xs uppercase tracking-wider text-ink/60">
                 <tr>
                   <th className="text-left px-5 py-3">Order code</th>

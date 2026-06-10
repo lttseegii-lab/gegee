@@ -7,7 +7,7 @@ export const metadata = { title: 'Шинэ бүтээгдэхүүн' };
 export default async function NewProductPage() {
   const subcategories = await getMenuSubcategories();
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-8 max-w-5xl">
       <nav className="text-[13px] text-ink/60 mb-4 flex items-center gap-2">
         <Link href="/admin/products" className="hover:text-ink">Бүтээгдэхүүн</Link>
         <span className="text-ink/30">›</span>

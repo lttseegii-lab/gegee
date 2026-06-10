@@ -25,7 +25,7 @@ export default async function AdminThemePage() {
     ]);
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-8 max-w-5xl">
       <nav className="text-[13px] text-ink/60 mb-4 flex items-center gap-2">
         <Link href="/admin" className="hover:text-ink">
           Admin
@@ -107,7 +107,7 @@ export default async function AdminThemePage() {
       <div className="mt-10 p-5 bg-white border border-border rounded-card text-sm text-ink/70">
         <h3 className="font-medium mb-2">💡 Хэрэглэгчид сэргэх хугацаа</h3>
         <ul className="space-y-1 list-disc list-inside">
-          <li>Хадгалмагц <code>revalidatePath('/', 'layout')</code> дуудагдана</li>
+          <li>Хадгалмагц <code>{"revalidatePath('/', 'layout')"}</code> дуудагдана</li>
           <li>
             Нэг хэрэглэгч дараагийн хуудас зочлоход шинэ өнгийг харна (~1-2 сек)
           </li>

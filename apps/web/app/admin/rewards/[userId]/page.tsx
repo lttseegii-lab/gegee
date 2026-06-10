@@ -59,7 +59,7 @@ export default async function AdminRewardsDetailPage({
     : 0;
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 sm:p-8 max-w-4xl">
       <nav className="text-[13px] text-ink/60 mb-4 flex items-center gap-2">
         <Link href="/admin" className="hover:text-ink">
           Admin
@@ -72,7 +72,7 @@ export default async function AdminRewardsDetailPage({
         <span className="text-ink font-medium">{profile.name ?? profile.email}</span>
       </nav>
 
-      <header className="mb-8 flex items-start justify-between gap-6">
+      <header className="mb-8 flex items-start justify-between gap-6 flex-wrap">
         <div>
           <h1 className="font-serif italic text-4xl">{profile.name}</h1>
           <div className="text-sm text-ink/60 mt-2">

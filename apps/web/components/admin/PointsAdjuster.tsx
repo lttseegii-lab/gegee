@@ -36,7 +36,7 @@ export function PointsAdjuster({ userId }: { userId: string }) {
 
   return (
     <form action={submit} className="space-y-4">
-      <div className="grid grid-cols-[1fr_2fr] gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-3">
         <div>
           <label className="block text-xs uppercase tracking-wider text-ink/60 mb-1.5">
             Оноо (±)

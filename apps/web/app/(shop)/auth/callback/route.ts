@@ -2,11 +2,13 @@
 // or after the email-verification link is clicked.
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { safeNext } from '@/lib/url/safeNext';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/account/profile';
+  // safeNext rejects //evil.com style open-redirect targets.
+  const next = safeNext(searchParams.get('next'), '/account/profile');
 
   if (code) {
     const supabase = createClient();

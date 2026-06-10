@@ -3,10 +3,13 @@
 import { revalidatePath } from 'next/cache';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { assertAdmin } from '@/lib/auth/admin';
+import { signOrderPhoto } from '@/lib/storage/orderPhotos';
 import type { OrderStatus } from '@/types/database';
 
 const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  pending_payment: ['paid', 'cancelled'],
+  // No manual pending_payment → paid: payment must be confirmed through QPay
+  // (which credits rewards + issues the e-receipt). Admins can only cancel.
+  pending_payment: ['cancelled'],
   paid: ['preparing', 'cancelled', 'refunded'],
   preparing: ['shipped', 'cancelled'],
   shipped: ['delivered', 'cancelled'],
@@ -111,17 +114,12 @@ export async function uploadOrderPhoto(
     return { ok: false, error: uploadErr.message };
   }
 
-  const { data: pub } = svc.storage
-    .from('order-photos')
-    .getPublicUrl(key);
-  const publicUrl = pub.publicUrl;
-
+  // Store the object KEY (not a public URL). The bucket is private (0022) and
+  // reads go through short-lived signed URLs (lib/storage/orderPhotos.ts).
   const { error: updateErr } = await svc
     .from('orders')
     .update(
-      slot === 'prep'
-        ? { prep_photo_url: publicUrl }
-        : { delivery_photo_url: publicUrl }
+      slot === 'prep' ? { prep_photo_url: key } : { delivery_photo_url: key }
     )
     .eq('id', orderId);
   if (updateErr) {
@@ -130,7 +128,8 @@ export async function uploadOrderPhoto(
 
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath(`/account/orders/${orderId}`);
-  return { ok: true, url: publicUrl };
+  const signedUrl = await signOrderPhoto(key);
+  return { ok: true, url: signedUrl ?? undefined };
 }
 
 export async function removeOrderPhoto(

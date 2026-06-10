@@ -65,7 +65,7 @@ export default async function AdminRewardsPage({
   const totalSpent = rows.reduce((sum, r) => sum + (r.total_spent ?? 0), 0);
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-4 sm:p-8 max-w-6xl">
       <nav className="text-[13px] text-ink/60 mb-4 flex items-center gap-2">
         <Link href="/admin" className="hover:text-ink">
           Admin
@@ -145,8 +145,8 @@ export default async function AdminRewardsPage({
       </form>
 
       {/* Table */}
-      <div className="bg-white border border-border rounded-card overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white border border-border rounded-card overflow-x-auto">
+        <table className="w-full min-w-[640px]">
           <thead className="bg-offwhite text-[11px] uppercase tracking-wider text-ink/50">
             <tr>
               <th className="text-left px-4 py-3">Хэрэглэгч</th>

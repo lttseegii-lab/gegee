@@ -22,6 +22,10 @@ const QPAY_BASE_URL =
 // Refresh a bit before the real expiry to avoid races at the boundary.
 const TOKEN_SAFETY_MS = 60_000;
 
+// Abort any QPay request that hangs, so a stalled upstream can't pin a
+// serverless function (or the user's payment page) open indefinitely.
+const QPAY_TIMEOUT_MS = 10_000;
+
 interface QPayTokenResponse {
   access_token: string;
   refresh_token: string;
@@ -87,6 +91,7 @@ async function mintToken(): Promise<string> {
       'Content-Type': 'application/json',
     },
     cache: 'no-store',
+    signal: AbortSignal.timeout(QPAY_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -95,10 +100,16 @@ async function mintToken(): Promise<string> {
   }
 
   const data = (await res.json()) as QPayTokenResponse;
-  // `expires_in` is an absolute epoch (seconds) → milliseconds.
+  // `expires_in` is documented as an absolute epoch (seconds) → milliseconds.
+  // Some tenants return a relative duration instead; if the epoch lands in the
+  // past, treat it as a duration so we don't re-mint the token on every call.
+  let expiresAtMs = data.expires_in * 1000;
+  if (expiresAtMs < Date.now()) {
+    expiresAtMs = Date.now() + data.expires_in * 1000;
+  }
   const token: CachedToken = {
     token: data.access_token,
-    expiresAtMs: data.expires_in * 1000,
+    expiresAtMs,
   };
   cachedToken = token;
   await writeTokenToDb(token);
@@ -182,6 +193,7 @@ export async function createInvoice(
     },
     body: JSON.stringify(body),
     cache: 'no-store',
+    signal: AbortSignal.timeout(QPAY_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -226,6 +238,7 @@ export async function checkInvoicePayment(
       offset: { page_number: 1, page_limit: 100 },
     }),
     cache: 'no-store',
+    signal: AbortSignal.timeout(QPAY_TIMEOUT_MS),
   });
   if (!res.ok) {
     const errBody = await res.text().catch(() => '');
@@ -273,6 +286,7 @@ export async function createEbarimt(params: {
     },
     body: JSON.stringify(body),
     cache: 'no-store',
+    signal: AbortSignal.timeout(QPAY_TIMEOUT_MS),
   });
   if (!res.ok) {
     const errBody = await res.text().catch(() => '');

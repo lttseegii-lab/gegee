@@ -24,9 +24,14 @@ export function CheckoutForm({ addresses }: { addresses: AddressRow[] }) {
   const [isPending, startTransition] = useTransition();
   const clearLocalCart = useCartStore((s) => s.clear);
 
-  // Load card message draft from localStorage on mount
+  // Load the card message draft, and re-read it whenever the window regains
+  // focus (returning from the card step / another tab) so the preview and the
+  // submitted note never go stale.
   useEffect(() => {
     setCardMessage(readCardMessageDraft());
+    const onFocus = () => setCardMessage(readCardMessageDraft());
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, []);
 
   function submit() {
@@ -34,16 +39,23 @@ export function CheckoutForm({ addresses }: { addresses: AddressRow[] }) {
       setError('Хаяг сонгоно уу');
       return;
     }
-    if (!delivery?.recipient_phone || delivery.recipient_phone.trim().length < 6) {
+    // Surprise gifts don't require the recipient's phone — the courier can use
+    // the buyer's address phone. Otherwise a recipient phone is required.
+    if (
+      !delivery?.is_surprise &&
+      (!delivery?.recipient_phone || delivery.recipient_phone.trim().length < 6)
+    ) {
       setError('Хүлээн авагчийн утсыг бөглөнө үү');
       return;
     }
     setError(null);
+    // Re-read the latest draft at submit time so a late edit isn't dropped.
+    const latestCardMessage = readCardMessageDraft() || cardMessage;
     startTransition(async () => {
       const res = await createOrderFromCart({
         addressId: selectedId,
         notes: notes || undefined,
-        cardMessage: cardMessage || undefined,
+        cardMessage: latestCardMessage || undefined,
         delivery: delivery ?? undefined,
       });
       if (!res.ok) {

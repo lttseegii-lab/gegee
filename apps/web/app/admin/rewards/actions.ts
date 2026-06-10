@@ -163,10 +163,10 @@ export async function deleteLedgerEntry(userId: string, entryId: number) {
 
   const svc = createServiceClient();
 
-  // Get the entry first so we know how many points to reverse
+  // Get the entry first so we know how many points (and spend) to reverse
   const { data: entry } = await svc
     .from('rewards_ledger')
-    .select('points, user_id')
+    .select('points, user_id, order_id')
     .eq('id', entryId)
     .single();
 
@@ -180,16 +180,34 @@ export async function deleteLedgerEntry(userId: string, entryId: number) {
     .eq('id', entryId);
   if (delErr) return { error: delErr.message };
 
-  // Reverse the points in the aggregate
+  // Order-derived entries also moved total_spent (the tier driver): a credit
+  // (+points) added the order total, a refund reversal (−points) subtracted it.
+  // Undo that same effect so the customer doesn't keep an unearned tier.
+  // Manual admin adjustments (no order_id) never touched total_spent.
+  let spentDelta = 0;
+  if (entry.order_id) {
+    const { data: ord } = await svc
+      .from('orders')
+      .select('total')
+      .eq('id', entry.order_id)
+      .maybeSingle();
+    const total = ord?.total ?? 0;
+    spentDelta = entry.points >= 0 ? total : -total;
+  }
+
   const { data: row } = await svc
     .from('user_rewards')
-    .select('total_points')
+    .select('total_points, total_spent')
     .eq('user_id', userId)
     .maybeSingle();
-  const current = row?.total_points ?? 0;
-  const next = Math.max(0, current - entry.points);
+  const currentPoints = row?.total_points ?? 0;
+  const currentSpent = row?.total_spent ?? 0;
   await svc.from('user_rewards').upsert(
-    { user_id: userId, total_points: next },
+    {
+      user_id: userId,
+      total_points: Math.max(0, currentPoints - entry.points),
+      total_spent: Math.max(0, currentSpent - spentDelta),
+    },
     { onConflict: 'user_id' }
   );
 

@@ -56,8 +56,14 @@ export function ProfileShell({
 
   const initial = (name || email || '?').charAt(0).toUpperCase();
 
+  const isItemActive = (it: NavItem) =>
+    pathname === it.href ||
+    pathname.startsWith(it.href + '/') ||
+    (it.match?.some((m) => pathname === m || pathname.startsWith(m + '/')) ??
+      false);
+
   return (
-    <div className="h-screen bg-ink/5 p-4 sm:p-6 flex">
+    <div className="min-h-screen lg:h-screen bg-ink/5 p-3 sm:p-6 flex">
       <div className="max-w-container w-full mx-auto bg-white rounded-[24px] shadow-soft overflow-hidden relative flex flex-col flex-1">
         <button
           type="button"
@@ -81,7 +87,54 @@ export function ProfileShell({
         </button>
 
         <div className="grid lg:grid-cols-[280px_1fr] flex-1 min-h-0">
-          <aside className="border-r border-border flex flex-col min-h-0">
+          {/* Mobile: compact profile header + horizontal nav (sidebar is lg-only) */}
+          <div className="lg:hidden border-b border-border">
+            <div className="flex items-center gap-3 px-4 py-3">
+              {flowerImageUrl ? (
+                <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-border bg-ink/5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={flowerImageUrl}
+                    alt={flowerLabel ?? 'avatar'}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-peach to-pinkHot flex items-center justify-center text-white font-semibold text-sm shrink-0">
+                  {initial}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="font-medium truncate text-sm">{name}</div>
+                <div className="text-xs text-ink/50 truncate">{email}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setConfirmOut(true)}
+                className="text-sm text-pinkHot shrink-0 px-2 min-h-[44px]"
+              >
+                Гарах
+              </button>
+            </div>
+            <nav className="flex gap-2 overflow-x-auto px-3 pb-3">
+              {ITEMS.map((it) => (
+                <Link
+                  key={it.href}
+                  href={it.href}
+                  className={`shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-full text-sm font-medium ${
+                    isItemActive(it)
+                      ? 'bg-ink text-white'
+                      : 'bg-ink/5 text-ink/80'
+                  }`}
+                >
+                  <span>{it.icon}</span>
+                  <span>{it.label}</span>
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          <aside className="hidden lg:flex border-r border-border lg:flex-col min-h-0">
             <div className="p-6 border-b border-border flex-shrink-0">
               <div className="flex items-center gap-3">
                 {flowerImageUrl ? (
@@ -110,12 +163,7 @@ export function ProfileShell({
 
             <nav className="flex-1 p-3 overflow-y-auto min-h-0">
               {ITEMS.map((it) => {
-                const isActive =
-                  pathname === it.href ||
-                  pathname.startsWith(it.href + '/') ||
-                  (it.match?.some(
-                    (m) => pathname === m || pathname.startsWith(m + '/')
-                  ) ?? false);
+                const isActive = isItemActive(it);
                 return (
                   <Link
                     key={it.href}
@@ -158,7 +206,7 @@ export function ProfileShell({
             </div>
           </aside>
 
-          <div className="p-8 sm:p-10 overflow-y-auto min-h-0">{children}</div>
+          <div className="p-5 sm:p-10 overflow-y-auto min-h-0">{children}</div>
         </div>
       </div>
 

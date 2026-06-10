@@ -11,7 +11,7 @@ export async function UserMenu() {
     return (
       <Link
         href="/auth/login"
-        className="text-ink hover:text-pinkHot transition-colors inline-flex items-center"
+        className="text-ink hover:text-pinkHot transition-colors inline-flex items-center justify-center p-2 -m-2"
         aria-label="Нэвтрэх"
         title="Нэвтрэх"
       >
@@ -44,7 +44,7 @@ export async function UserMenu() {
   return (
     <Link
       href="/account/profile"
-      className="inline-flex items-center hover:text-pinkHot transition-colors"
+      className="inline-flex items-center justify-center p-2 -m-2 hover:text-pinkHot transition-colors"
       aria-label="Хувийн мэдээлэл"
       title={profile?.name ?? user.email ?? 'Profile'}
     >

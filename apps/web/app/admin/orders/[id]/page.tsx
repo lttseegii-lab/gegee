@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { StatusUpdater } from '@/components/admin/StatusUpdater';
 import { OrderPhotoUploader } from '@/components/admin/OrderPhotoUploader';
 import { productImageUrl } from '@/lib/ai/pollinations';
+import { signOrderPhoto } from '@/lib/storage/orderPhotos';
 import type { OrderStatus } from '@/types/database';
 
 const SLOT_LABEL: Record<string, string> = {
@@ -84,8 +85,14 @@ export default async function AdminOrderDetail({
 
   const productMap = new Map((products ?? []).map((p) => [p.id, p]));
 
+  // Private bucket — sign the stored photo keys for display in the uploader.
+  const [prepPhoto, deliveryPhoto] = await Promise.all([
+    signOrderPhoto(order.prep_photo_url),
+    signOrderPhoto(order.delivery_photo_url),
+  ]);
+
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-4 sm:p-8 max-w-6xl">
       <nav className="text-[13px] text-ink/60 mb-4 flex items-center gap-2">
         <Link href="/admin" className="hover:text-ink">Admin</Link>
         <span className="text-ink/30">›</span>
@@ -245,13 +252,13 @@ export default async function AdminOrderDetail({
                 orderId={order.id}
                 slot="prep"
                 label="Баглаа бэлэн"
-                initialUrl={order.prep_photo_url}
+                initialUrl={prepPhoto}
               />
               <OrderPhotoUploader
                 orderId={order.id}
                 slot="delivery"
                 label="Хүргэгдсэн"
-                initialUrl={order.delivery_photo_url}
+                initialUrl={deliveryPhoto}
               />
             </div>
           </section>

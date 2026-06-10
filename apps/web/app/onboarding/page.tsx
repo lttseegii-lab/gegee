@@ -13,6 +13,7 @@ import { FinishButton, DoneButton } from '@/components/onboarding/FinishButton';
 import { GiftReveal } from '@/components/onboarding/GiftReveal';
 import { MOODS_BY_KEY } from '@/lib/moods';
 import { OCCASIONS, formatMonthDay } from '@/lib/memory/occasions';
+import { safeNext } from '@/lib/url/safeNext';
 
 type SearchParams = {
   step?: string | string[];
@@ -32,9 +33,10 @@ export default async function OnboardingPage({
   if (!user) redirect('/auth/login');
 
   const step = parseStep(searchParams.step);
-  const nextRaw = typeof searchParams.next === 'string' ? searchParams.next : '/';
-  // Sanitize next: must be a relative path
-  const next = nextRaw.startsWith('/') ? nextRaw : '/';
+  // Sanitize next: must be a safe same-origin relative path (rejects //evil.com).
+  const next = safeNext(
+    typeof searchParams.next === 'string' ? searchParams.next : '/'
+  );
   const bonusRaw =
     typeof searchParams.bonus === 'string' ? searchParams.bonus : '';
   const bonusPoints = Math.max(0, Math.min(50000, parseInt(bonusRaw, 10) || 0));

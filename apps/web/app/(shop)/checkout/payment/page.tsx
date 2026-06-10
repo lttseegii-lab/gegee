@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { redirect, notFound } from 'next/navigation';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { requireOnboarded } from '@/lib/auth/requireOnboarding';
+import { requireAuth } from '@/lib/auth/requireOnboarding';
 import { createInvoice, type InvoiceResponse } from '@/lib/qpay/client';
 import { PaymentPoller } from '@/components/checkout/PaymentPoller';
 import { CheckPaymentButton } from '@/components/checkout/CheckPaymentButton';
@@ -37,9 +37,9 @@ export default async function PaymentPage({
   if (!orderId || isNaN(orderId)) notFound();
 
   const supabase = createClient();
-  // Defense in depth: reaching payment requires a created order (which already
-  // passes the checkout gate), but enforce the onboarding gate here too.
-  const user = await requireOnboarded('/checkout');
+  // Require sign-in only (onboarding not required — see requireAuth). Reaching
+  // payment already implies a created order owned by this user.
+  const user = await requireAuth(`/checkout/payment?orderId=${orderId}`);
 
   // Fetch order. `qpay_invoice` is added by migration 0018 — if it isn't applied
   // yet the rich select errors, so fall back to the base columns gracefully.
@@ -145,9 +145,15 @@ export default async function PaymentPage({
         <div className="border border-pinkHot/40 bg-blush rounded-card p-6 text-sm text-ink/80 text-left">
           <p className="font-medium mb-2">⚠️ Төлбөрийн систем бэлэн биш байна</p>
           <p className="text-ink/60 mb-3">{qpayError}</p>
-          <p className="text-xs text-ink/50">
+          <p className="text-xs text-ink/50 mb-4">
             Та .env.local-д QPay merchant credentials-ийг нэмж дараа дахин оролдоно уу.
           </p>
+          <Link
+            href={`/checkout/payment?orderId=${order.id}`}
+            className="btn-primary inline-block"
+          >
+            Дахин оролдох
+          </Link>
         </div>
       ) : invoiceData ? (
         <>

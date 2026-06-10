@@ -58,14 +58,17 @@ export const useCartStore = create<CartState & CartActions>()(
       toggle: () => set((s) => ({ isOpen: !s.isOpen })),
 
       add: async (productId, qty = 1) => {
-        // Optimistic
-        const items = [...get().items];
-        const existing = items.find((i) => i.productId === productId);
-        if (existing) {
-          existing.qty = Math.min(20, existing.qty + qty);
-        } else {
-          items.push({ productId, qty: Math.min(20, qty) });
-        }
+        // Optimistic, immutable update (mirrors setQty) so rapid concurrent
+        // clicks can't mutate shared state or lose an increment.
+        const inc = Math.max(1, Math.floor(qty));
+        const existing = get().items.find((i) => i.productId === productId);
+        const items = existing
+          ? get().items.map((i) =>
+              i.productId === productId
+                ? { ...i, qty: Math.min(20, i.qty + inc) }
+                : i
+            )
+          : [...get().items, { productId, qty: Math.min(20, inc) }];
         set({ items });
 
         // Persist if logged in
@@ -81,6 +84,19 @@ export const useCartStore = create<CartState & CartActions>()(
             return;
           }
         }
+        // Guard against adding a product that has since been deactivated (a
+        // stale Add button) — it would otherwise sit in the cart and be rejected
+        // at checkout. Custom DIY products are intentionally inactive.
+        const { data: prod } = await supabase
+          .from('products')
+          .select('active, tags')
+          .eq('id', productId)
+          .maybeSingle();
+        const isCustomDiy = (prod?.tags ?? []).includes('custom-diy');
+        if (prod && prod.active === false && !isCustomDiy) {
+          await get().remove(productId);
+          return;
+        }
         // Make sure product details for the new item are loaded
         if (!get().products[productId]) {
           await get().refreshProducts();
@@ -91,11 +107,15 @@ export const useCartStore = create<CartState & CartActions>()(
         set({ items: get().items.filter((i) => i.productId !== productId) });
         const uid = await currentUserId();
         if (uid) {
-          await supabase
+          const { error } = await supabase
             .from('cart_items')
             .delete()
             .eq('user_id', uid)
             .eq('product_id', productId);
+          if (error) {
+            console.error('Cart remove error', error);
+            await get().refresh();
+          }
         }
       },
 
@@ -111,9 +131,13 @@ export const useCartStore = create<CartState & CartActions>()(
 
         const uid = await currentUserId();
         if (uid) {
-          await supabase
+          const { error } = await supabase
             .from('cart_items')
             .upsert({ user_id: uid, product_id: productId, qty: clamped });
+          if (error) {
+            console.error('Cart setQty error', error);
+            await get().refresh();
+          }
         }
       },
 
@@ -162,7 +186,25 @@ export const useCartStore = create<CartState & CartActions>()(
         }
         const map: Record<string, Product> = {};
         (data ?? []).forEach((p) => { map[p.id] = p; });
-        set({ products: map });
+        // Prune cart lines whose product is no longer available (inactive/
+        // deleted catalog items in a persisted guest cart) so they don't render
+        // as eternal "Loading…" rows or skew the count. Owners can always read
+        // their own cart products (incl. custom DIY) via RLS, so nothing
+        // legitimate is dropped.
+        const missing = items.filter((i) => !map[i.productId]);
+        if (missing.length > 0) {
+          set({ items: items.filter((i) => map[i.productId]), products: map });
+          const uid = await currentUserId();
+          if (uid) {
+            await supabase
+              .from('cart_items')
+              .delete()
+              .eq('user_id', uid)
+              .in('product_id', missing.map((i) => i.productId));
+          }
+        } else {
+          set({ products: map });
+        }
       },
 
       mergeToServer: async () => {

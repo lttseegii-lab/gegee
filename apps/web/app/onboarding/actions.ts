@@ -2,10 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { MOODS_BY_KEY } from '@/lib/moods';
 import { ONBOARDING_FLOWERS_BY_KEY } from '@/lib/onboarding-flowers';
-import { getRewardsConfig } from '@/lib/rewards/getConfig';
 
 export async function saveSignatureMood(key: string) {
   const supabase = createClient();
@@ -48,65 +47,17 @@ export async function finishOnboarding(next?: string) {
   } = await supabase.auth.getUser();
   if (!user) redirect('/auth/login');
 
-  // Check whether this is the first completion.
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('onboarded_at')
-    .eq('id', user.id)
-    .maybeSingle();
-  const alreadyDone = profile?.onboarded_at != null;
-
-  // Always stamp onboarded_at — idempotent: if already set, this re-writes
-  // the same value or a newer one but doesn't grant points again.
-  if (!alreadyDone) {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ onboarded_at: new Date().toISOString() })
-      .eq('id', user.id);
-    if (error) return { error: error.message };
-  }
-
-  let awardedPoints = 0;
-  if (!alreadyDone) {
-    // Bonus amount is admin-configurable via /admin/rewards.
-    const { signupBonus } = await getRewardsConfig();
-
-    if (signupBonus > 0) {
-      // Award the welcome-completion bonus. Use the service client because
-      // rewards_ledger / user_rewards are admin-write under RLS.
-      const svc = createServiceClient();
-
-      const { data: rewards } = await svc
-        .from('user_rewards')
-        .select('total_points')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      const currentTotal = rewards?.total_points ?? 0;
-      const newTotal = currentTotal + signupBonus;
-
-      const { error: rewardErr } = await svc.from('user_rewards').upsert(
-        { user_id: user.id, total_points: newTotal },
-        { onConflict: 'user_id' }
-      );
-
-      if (!rewardErr) {
-        const { error: ledgerErr } = await svc.from('rewards_ledger').insert({
-          user_id: user.id,
-          points: signupBonus,
-          reason: 'Бүртгэл дуусгасан баяр — тавтай морил',
-        });
-        if (!ledgerErr) {
-          awardedPoints = signupBonus;
-        }
-      }
-    }
-  }
+  // Atomically claim the one-time onboarding bonus. The DB function flips
+  // onboarded_at AND grants the bonus in a single transaction (see migration
+  // 0020 claim_signup_bonus), so concurrent calls can no longer double-award —
+  // the previous read-check-write here was a TOCTOU race.
+  const { data: awardedPoints, error } = await supabase.rpc('claim_signup_bonus');
+  if (error) return { error: error.message };
 
   revalidatePath('/', 'layout');
   return {
     ok: true,
     next: next || '/account/profile',
-    awardedPoints,
+    awardedPoints: awardedPoints ?? 0,
   };
 }

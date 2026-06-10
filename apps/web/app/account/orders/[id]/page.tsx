@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { OrderTimeline } from '@/components/order/OrderTimeline';
+import { signOrderPhoto } from '@/lib/storage/orderPhotos';
 
 export const metadata = { title: 'Захиалгын дэлгэрэнгүй' };
 
@@ -41,6 +42,13 @@ export default async function OrderDetailPage({
   ]);
 
   if (!order) notFound();
+
+  // Order photos live in a private bucket — mint short-lived signed URLs now
+  // that ownership is verified (the query above filters by user_id).
+  const [prepPhoto, deliveryPhoto] = await Promise.all([
+    signOrderPhoto(order.prep_photo_url),
+    signOrderPhoto(order.delivery_photo_url),
+  ]);
 
   // Fetch product names for line items
   const productIds = (items ?? []).map((i) => i.product_id);
@@ -91,6 +99,21 @@ export default async function OrderDetailPage({
         </div>
       </header>
 
+      {/* Resume payment for an unpaid order */}
+      {order.status === 'pending_payment' && (
+        <div className="mb-8 bg-yellow-pale border border-goldDeep/30 rounded-card p-5 flex items-center justify-between gap-4 flex-wrap">
+          <div className="text-sm text-ink/80">
+            Энэ захиалгын төлбөр хүлээгдэж байна.
+          </div>
+          <Link
+            href={`/checkout/payment?orderId=${order.id}`}
+            className="btn-primary shrink-0"
+          >
+            Төлбөр төлөх →
+          </Link>
+        </div>
+      )}
+
       {/* Status timeline */}
       <section className="mb-10">
         <h2 className="font-medium text-sm uppercase tracking-wider text-ink/50 mb-4">
@@ -102,8 +125,8 @@ export default async function OrderDetailPage({
             paidAt={order.paid_at}
             deliveredAt={order.delivered_at}
             createdAt={order.created_at}
-            prepPhotoUrl={order.prep_photo_url}
-            deliveryPhotoUrl={order.delivery_photo_url}
+            prepPhotoUrl={prepPhoto}
+            deliveryPhotoUrl={deliveryPhoto}
           />
         </div>
       </section>

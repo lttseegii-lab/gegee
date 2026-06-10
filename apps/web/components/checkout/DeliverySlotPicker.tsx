@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 
+import { ubDateString } from '@/lib/time/ub';
+
 export interface DeliveryPlan {
   date: string;        // YYYY-MM-DD
   slot: 'asap' | '10-13' | '14-17' | '18-21';
@@ -17,7 +19,9 @@ const SLOTS: { key: DeliveryPlan['slot']; label: string; detail: string }[] = [
 ];
 
 function fmtDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  // Asia/Ulaanbaatar, not UTC — otherwise the "today" chip and the date we send
+  // to the server land a day behind for UTC+8 users.
+  return ubDateString(d);
 }
 
 function dayLabel(d: Date): { day: string; mn: string } {
@@ -60,14 +64,22 @@ export function DeliverySlotPicker({ initial, onChange }: Props) {
   }, [today]);
 
   function update(patch: Partial<DeliveryPlan>) {
+    const nextDate = patch.date ?? date;
+    let nextSlot = patch.slot ?? slot;
+    // ASAP is only valid for today. If the user picks a future day while ASAP is
+    // selected, move them to the first real window — otherwise the order RPC
+    // rejects "asap + future date" and checkout silently fails.
+    if (nextSlot === 'asap' && nextDate !== fmtDate(today)) {
+      nextSlot = '10-13';
+    }
     const next: DeliveryPlan = {
-      date: patch.date ?? date,
-      slot: patch.slot ?? slot,
+      date: nextDate,
+      slot: nextSlot,
       is_surprise: patch.is_surprise ?? surprise,
       recipient_phone: patch.recipient_phone ?? recipientPhone,
     };
-    if (patch.date) setDate(patch.date);
-    if (patch.slot) setSlot(patch.slot);
+    setDate(nextDate);
+    setSlot(nextSlot);
     if (patch.is_surprise !== undefined) setSurprise(patch.is_surprise);
     if (patch.recipient_phone !== undefined) setRecipientPhone(patch.recipient_phone);
     onChange?.(next);
@@ -81,7 +93,7 @@ export function DeliverySlotPicker({ initial, onChange }: Props) {
         <label className="block text-xs uppercase tracking-wider text-ink/60 mb-2">
           Хүргэх өдөр
         </label>
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2">
           {days.map((d) => {
             const v = fmtDate(d);
             const isActive = v === date;
@@ -128,10 +140,10 @@ export function DeliverySlotPicker({ initial, onChange }: Props) {
                 onClick={() => !disabled && update({ slot: s.key })}
                 disabled={disabled}
                 className={`flex flex-col items-start text-left p-3 rounded-lg border transition-colors ${
-                  isActive
-                    ? 'bg-ink text-white border-ink'
-                    : disabled
-                      ? 'bg-offwhite text-ink/30 border-border cursor-not-allowed'
+                  disabled
+                    ? 'bg-offwhite text-ink/30 border-border cursor-not-allowed'
+                    : isActive
+                      ? 'bg-ink text-white border-ink'
                       : 'bg-white text-ink border-border hover:border-ink'
                 }`}
               >
@@ -173,7 +185,7 @@ export function DeliverySlotPicker({ initial, onChange }: Props) {
       <div>
         <label className="block text-xs uppercase tracking-wider text-ink/60 mb-1.5">
           Хүлээн авагчийн утас
-          <span className="text-pinkHot ml-0.5">*</span>
+          {!surprise && <span className="text-pinkHot ml-0.5">*</span>}
         </label>
         <input
           type="tel"
@@ -181,11 +193,13 @@ export function DeliverySlotPicker({ initial, onChange }: Props) {
           value={recipientPhone}
           onChange={(e) => update({ recipient_phone: e.target.value })}
           placeholder="+976 9999 9999"
-          required
+          required={!surprise}
           className="w-full border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-ink"
         />
         <p className="text-xs text-ink/50 mt-1">
-          Хүргэлтийн үед утсаар холбогдоход хэрэгтэй
+          {surprise
+            ? 'Заавал биш — нууц бэлэгт таны хаягийн утсаар холбогдоно'
+            : 'Хүргэлтийн үед утсаар холбогдоход хэрэгтэй'}
         </p>
       </div>
     </div>

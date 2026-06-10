@@ -68,6 +68,12 @@ export async function updateMemoryDate(id: number, formData: FormData) {
   const day = asInt(formData.get('day'));
 
   if (!month || !day) return { error: 'Сар ба өдөр заавал' };
+  if (!OCCASION_KEYS.includes(occasion)) {
+    return { error: 'Үйл явдлын төрлийг сонгоно уу' };
+  }
+  if (day > 31 || day < 1 || month > 12 || month < 1) {
+    return { error: 'Сар/өдөр буруу' };
+  }
 
   const updates = {
     name: asStr(formData.get('name')),

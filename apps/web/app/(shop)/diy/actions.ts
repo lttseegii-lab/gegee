@@ -48,7 +48,7 @@ export async function createDiyAndAddToCart(
     if (!flowersByKey[s.key]) {
       return { ok: false, error: `Тодорхойгүй цэцэг: ${s.key}` };
     }
-    if (s.qty < 0 || s.qty > 50) {
+    if (s.qty < 0 || s.qty > 20) {
       return { ok: false, error: 'Тоо хэмжээ буруу' };
     }
   }
@@ -90,11 +90,28 @@ export async function createDiyAndAddToCart(
     input.customName?.trim() ||
     `Миний баглаа · ${input.variantName}`;
 
+  // Validate the client-supplied image URL — https + an allowlisted host only
+  // (it is later rendered via next/image). Fall back to empty (the image helper
+  // regenerates from prompt + seed) rather than storing an arbitrary URL.
+  let safeImageUrl = '';
+  try {
+    const u = new URL(input.imageUrl);
+    if (
+      u.protocol === 'https:' &&
+      (u.hostname === 'image.pollinations.ai' ||
+        u.hostname.endsWith('.supabase.co'))
+    ) {
+      safeImageUrl = u.toString();
+    }
+  } catch {
+    // invalid URL → leave empty
+  }
+
   // Use service client to insert (bypass RLS — admin-only writes on products)
   const svc = createServiceClient();
   const { error: insertErr } = await svc.from('products').insert({
     id: productId,
-    name: customName,
+    name: customName.slice(0, 80),
     price: pricing.total,
     rating: null,
     reviews: 0,
@@ -103,8 +120,8 @@ export async function createDiyAndAddToCart(
     tags: ['custom-diy', 'bouquet', input.variantKey],
     occasion: [],
     img_seed: input.seed,
-    img_prompt: input.prompt,
-    img_url: input.imageUrl,
+    img_prompt: input.prompt.slice(0, 500),
+    img_url: safeImageUrl,
     active: false, // Hidden from catalog
   });
 

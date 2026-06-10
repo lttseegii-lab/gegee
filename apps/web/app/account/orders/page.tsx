@@ -96,6 +96,14 @@ export default async function OrdersPage() {
                     </span>
                   </div>
                 </Link>
+                {status === 'pending_payment' && (
+                  <Link
+                    href={`/checkout/payment?orderId=${o.id}`}
+                    className="mt-2 flex items-center justify-center gap-1 text-sm font-medium text-pinkHot bg-blush/50 hover:bg-blush rounded-card py-2.5 transition-colors"
+                  >
+                    Төлбөр төлөх →
+                  </Link>
+                )}
               </li>
             );
           })}

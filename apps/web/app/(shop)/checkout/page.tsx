@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
-import { requireOnboarded } from '@/lib/auth/requireOnboarding';
+import { requireAuth } from '@/lib/auth/requireOnboarding';
 import { CheckoutForm } from '@/components/checkout/CheckoutForm';
 import {
   CheckoutStepIndicator,
@@ -23,9 +23,9 @@ export default async function CheckoutPage({
   searchParams: SearchParams;
 }) {
   const supabase = createClient();
-  // Must be a fully-registered (onboarded) user to check out. Half-registered
-  // users — signed in but never finished onboarding — are sent to finish it.
-  const user = await requireOnboarded('/checkout');
+  // Sign-in required, but NOT completed onboarding — forcing onboarding before
+  // checkout was the biggest conversion drag. Onboarding stays optional.
+  const user = await requireAuth('/checkout');
 
   const step = parseStep(searchParams.step);
 

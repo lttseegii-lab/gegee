@@ -38,3 +38,18 @@ export async function requireOnboarded(next: string) {
 
   return user;
 }
+
+/**
+ * Lighter guard: requires only that the user is signed in (NOT that onboarding
+ * is finished). Used for checkout/payment so a buyer isn't forced through the
+ * full onboarding flow before they can purchase — the biggest conversion drag.
+ * Onboarding stays available (and still grants the signup bonus on completion).
+ */
+export async function requireAuth(next: string) {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect(`/auth/login?next=${encodeURIComponent(next)}`);
+  return user;
+}

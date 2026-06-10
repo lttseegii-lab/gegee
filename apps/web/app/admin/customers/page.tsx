@@ -42,7 +42,7 @@ export default async function AdminCustomersPage({
   });
 
   return (
-    <div className="p-8 max-w-7xl">
+    <div className="p-4 sm:p-8 max-w-7xl">
       <header className="mb-8">
         <h1 className="font-serif italic text-4xl">Хэрэглэгчид</h1>
         <p className="text-sm text-ink/60 mt-1">
@@ -68,8 +68,8 @@ export default async function AdminCustomersPage({
         )}
       </form>
 
-      <div className="bg-white border border-border rounded-card overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white border border-border rounded-card overflow-x-auto">
+        <table className="w-full min-w-[760px] text-sm">
           <thead className="bg-offwhite text-xs uppercase tracking-wider text-ink/60">
             <tr>
               <th className="text-left px-5 py-3">Нэр</th>

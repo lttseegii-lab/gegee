@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -23,13 +23,18 @@ export function PaymentPoller({
   maxAttempts?: number;
 }) {
   const router = useRouter();
+  const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
     let attempts = 0;
     let active = true;
 
     async function tick() {
-      if (!active || attempts >= maxAttempts) return;
+      if (!active) return;
+      if (attempts >= maxAttempts) {
+        setTimedOut(true);
+        return;
+      }
       attempts++;
       const verify = attempts % 5 === 0 ? '&verify=1' : '';
       try {
@@ -56,5 +61,13 @@ export function PaymentPoller({
     };
   }, [orderId, orderCode, intervalMs, maxAttempts, router]);
 
+  if (timedOut) {
+    return (
+      <div className="mb-6 border border-goldDeep/30 bg-yellow-pale rounded-card p-4 text-sm text-ink/80">
+        Автомат шалгалтын хугацаа дууслаа. Төлбөрөө хийсэн бол доорх «Төлбөр
+        шалгах» товчоор шалгана уу.
+      </div>
+    );
+  }
   return null;
 }

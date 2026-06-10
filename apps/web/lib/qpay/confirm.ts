@@ -69,7 +69,7 @@ export async function confirmOrderPayment(
 
   const { data: order } = await supabase
     .from('orders')
-    .select('id, status, qpay_invoice_id')
+    .select('id, status, qpay_invoice_id, total')
     .eq('id', orderId)
     .single();
 
@@ -84,11 +84,32 @@ export async function confirmOrderPayment(
   }
 
   const check = await checkInvoicePayment(order.qpay_invoice_id);
-  const paidRow = check.rows.find((r) => r.payment_status === 'PAID');
-  if (!paidRow) {
+  const paidRows = check.rows.filter((r) => r.payment_status === 'PAID');
+  if (paidRows.length === 0) {
     return { paid: false, status: order.status, reason: 'awaiting' };
   }
 
+  // Verify the settled amount actually covers the order total. QPay can report
+  // PARTIAL / short payments; without this an underpayment would flip the order
+  // to paid and credit full rewards. Always recompute against the DB total —
+  // never a client-supplied amount.
+  const paidSum = paidRows.reduce(
+    (sum, r) => sum + Number(r.payment_amount ?? 0),
+    0
+  );
+  if (paidSum < order.total) {
+    console.warn(
+      `QPay underpayment for order ${orderId}: paid ${paidSum} < total ${order.total} — not confirming`
+    );
+    return { paid: false, status: order.status, reason: 'awaiting' };
+  }
+  if (paidSum > order.total) {
+    console.warn(
+      `QPay overpayment for order ${orderId}: paid ${paidSum} > total ${order.total}`
+    );
+  }
+
+  const paidRow = paidRows[0];
   const paymentId = String(paidRow.payment_id);
   // Conditional flip: only the call that transitions pending_payment → paid gets
   // a row back, so the e-receipt is created exactly once even under concurrent
@@ -98,6 +119,7 @@ export async function confirmOrderPayment(
     .update({
       status: 'paid',
       qpay_payment_id: paymentId,
+      qpay_paid_amount: Math.round(paidSum),
       paid_at: paidRow.payment_date ?? new Date().toISOString(),
     })
     .eq('id', orderId)
@@ -115,7 +137,40 @@ export async function confirmOrderPayment(
     return { paid: true, status: 'paid', reason: 'confirmed', paymentId };
   }
 
-  // 0 rows updated → another concurrent call already flipped it (it handles the
-  // receipt), or the order wasn't pending. The payment is paid either way.
-  return { paid: true, status: 'paid', reason: 'already_paid', paymentId };
+  // 0 rows updated: the order was not 'pending_payment' at flip time. Either a
+  // concurrent caller already flipped it (fine), or it was swept/cancelled
+  // before the payment landed — in which case money was captured against a
+  // cancelled order and we must resurrect it rather than silently drop it.
+  const { data: cur } = await supabase
+    .from('orders')
+    .select('status')
+    .eq('id', orderId)
+    .single();
+
+  if (cur?.status && PAID_STATUSES.includes(cur.status)) {
+    // Another concurrent call already flipped it; it owns the receipt.
+    return { paid: true, status: cur.status, reason: 'already_paid', paymentId };
+  }
+
+  // Paid against a cancelled/refunded order — resurrect to paid. The orders
+  // triggers re-derive capacity and credit points on the → paid transition.
+  console.error(
+    `QPay payment for order ${orderId} landed on status='${cur?.status}'; resurrecting to paid`
+  );
+  const { data: revived } = await supabase
+    .from('orders')
+    .update({
+      status: 'paid',
+      qpay_payment_id: paymentId,
+      qpay_paid_amount: Math.round(paidSum),
+      paid_at: paidRow.payment_date ?? new Date().toISOString(),
+    })
+    .eq('id', orderId)
+    .in('status', ['cancelled', 'refunded'])
+    .select('id');
+
+  if (revived && revived.length === 1) {
+    await tryCreateEbarimt(supabase, orderId, paymentId);
+  }
+  return { paid: true, status: 'paid', reason: 'confirmed', paymentId };
 }

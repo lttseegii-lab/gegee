@@ -13,7 +13,7 @@ export default async function AdminLayout({
   const { profile } = await requireAdmin();
 
   return (
-    <div className="flex min-h-screen bg-offwhite">
+    <div className="lg:flex min-h-screen bg-offwhite">
       <AdminSidebar adminName={profile.name ?? profile.email ?? 'Admin'} />
       <main className="flex-1 min-w-0">{children}</main>
     </div>

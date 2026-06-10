@@ -30,12 +30,29 @@ async function main() {
 
   const client = new Client({
     connectionString: url,
-    ssl: { rejectUnauthorized: false },
+    // NOTE: cert verification is disabled for the Supabase pooler. To harden,
+    // pass the Supabase CA cert via `ssl: { ca: ... }` and set DB_SSL_STRICT=1.
+    ssl: { rejectUnauthorized: process.env.DB_SSL_STRICT === '1' },
     connectionTimeoutMillis: 10000,
   });
 
   await client.connect();
   console.log(`✅ Connected to ${POOLER_HOST}`);
+
+  // Migration ledger: apply each file at most once. The forgiving "already
+  // exists" handling below is kept so the first run against a DB that was
+  // migrated before this ledger existed records the old files instead of
+  // erroring.
+  await client.query(`
+    create table if not exists public.schema_migrations (
+      version     text primary key,
+      applied_at  timestamptz not null default now()
+    )
+  `);
+  const { rows: appliedRows } = await client.query(
+    'select version from public.schema_migrations'
+  );
+  const applied = new Set(appliedRows.map((r) => r.version));
 
   try {
     const files = readdirSync(MIGRATIONS_DIR)
@@ -44,6 +61,10 @@ async function main() {
     console.log(`📦 Found ${files.length} migration file(s)`);
 
     for (const file of files) {
+      if (applied.has(file)) {
+        console.log(`⏭  ${file} already applied — skipping`);
+        continue;
+      }
       const path = join(MIGRATIONS_DIR, file);
       const sql = readFileSync(path, 'utf-8');
       console.log(`\n▶ Applying ${file} (${sql.length} chars)`);
@@ -63,6 +84,10 @@ async function main() {
           throw e;
         }
       }
+      await client.query(
+        'insert into public.schema_migrations(version) values ($1) on conflict do nothing',
+        [file]
+      );
     }
 
     // Smoke check

@@ -121,7 +121,7 @@ export function DiyWrapsPicker({ initial }: { initial: DiyWrap[] }) {
                 ))}
               </select>
             </Field>
-            <Field label="Тайлбар" className="flex-1 min-w-[140px]">
+            <Field label="Тайлбар" className="flex-1 min-w-0 w-full sm:w-auto sm:min-w-[140px]">
               <input
                 value={w.description}
                 onChange={(e) => update(idx, { description: e.target.value })}
@@ -129,7 +129,7 @@ export function DiyWrapsPicker({ initial }: { initial: DiyWrap[] }) {
                 className="diy-inp"
               />
             </Field>
-            <Field label="AI prompt (англиар)" className="flex-1 min-w-[160px]">
+            <Field label="AI prompt (англиар)" className="flex-1 min-w-0 w-full sm:w-auto sm:min-w-[160px]">
               <input
                 value={w.promptFragment}
                 onChange={(e) =>

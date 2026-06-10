@@ -129,7 +129,7 @@ export function MenuColorPicker({ initial }: { initial: MenuColorMap }) {
             <div className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
               Эсвэл preset
             </div>
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
               {COLOR_PALETTE.map((c) => {
                 const isActive = c.key === selected;
                 return (
@@ -155,7 +155,7 @@ export function MenuColorPicker({ initial }: { initial: MenuColorMap }) {
                 );
               })}
             </div>
-            <div className="mt-2 grid grid-cols-7 gap-2">
+            <div className="mt-2 grid grid-cols-4 sm:grid-cols-7 gap-2">
               {COLOR_PALETTE.map((c) => (
                 <div
                   key={c.key}

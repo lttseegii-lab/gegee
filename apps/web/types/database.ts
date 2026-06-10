@@ -261,6 +261,7 @@ export type Database = {
           qpay_ebarimt: Json | null
           qpay_invoice: Json | null
           qpay_invoice_id: string | null
+          qpay_paid_amount: number | null
           qpay_payment_id: string | null
           recipient_phone: string | null
           status: Database["public"]["Enums"]["order_status"] | null
@@ -287,6 +288,7 @@ export type Database = {
           qpay_ebarimt?: Json | null
           qpay_invoice?: Json | null
           qpay_invoice_id?: string | null
+          qpay_paid_amount?: number | null
           qpay_payment_id?: string | null
           recipient_phone?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
@@ -313,6 +315,7 @@ export type Database = {
           qpay_ebarimt?: Json | null
           qpay_invoice?: Json | null
           qpay_invoice_id?: string | null
+          qpay_paid_amount?: number | null
           qpay_payment_id?: string | null
           recipient_phone?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
@@ -565,6 +568,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_signup_bonus: { Args: never; Returns: number }
+      create_order_from_cart: {
+        Args: {
+          p_address_id: number
+          p_notes?: string | null
+          p_card_message?: string | null
+          p_delivery?: Json | null
+        }
+        Returns: { order_id: number; order_code: string; total: number }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       merge_guest_cart: { Args: { items: Json }; Returns: undefined }
       release_capacity: { Args: { target_date: string }; Returns: undefined }

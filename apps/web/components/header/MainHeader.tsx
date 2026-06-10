@@ -3,6 +3,7 @@ import { UserMenu } from './UserMenu';
 import { CartButton } from '@/components/cart/CartButton';
 import { WishlistButton } from './WishlistButton';
 import { NavTab } from './NavTab';
+import { MobileNav } from './MobileNav';
 import {
   MEGA_TABS,
   type MegaTab,
@@ -105,7 +106,7 @@ export async function MainHeader() {
 
       {/* Row 2: Logo + Search + Account */}
       <div className="py-4">
-        <div className="max-w-container mx-auto px-6 grid grid-cols-[auto_1fr_auto] gap-10 items-center">
+        <div className="max-w-container mx-auto px-6 grid grid-cols-[auto_1fr_auto] gap-3 md:gap-10 items-center">
           <Link href="/" className="inline-block" aria-label="Thanks">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -140,7 +141,8 @@ export async function MainHeader() {
             </div>
           </div>
 
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-2 sm:gap-4">
+            <MobileNav tabs={tabs} />
             <UserMenu />
             <WishlistButton />
             <CartButton />
@@ -151,7 +153,7 @@ export async function MainHeader() {
       </header>
 
       {/* Row 3: Main nav — sticky; stays fixed at the top while scrolling */}
-      <nav className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-border">
+      <nav className="hidden md:block sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-border">
         <ul className="max-w-container mx-auto px-6 flex items-center justify-center gap-10 py-0 text-[15px]">
           {tabs.map((tab) => (
             <NavTab key={tab.label} tab={tab} />

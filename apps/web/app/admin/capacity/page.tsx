@@ -28,7 +28,7 @@ export default async function AdminCapacityPage() {
   const recordMap = new Map((existing ?? []).map((r) => [r.date, r]));
 
   return (
-    <div className="p-8 max-w-7xl">
+    <div className="p-4 sm:p-8 max-w-7xl">
       <header className="mb-8">
         <h1 className="font-serif italic text-4xl">Capacity</h1>
         <p className="text-sm text-ink/60 mt-1">
@@ -62,7 +62,7 @@ export default async function AdminCapacityPage() {
             Тухайн өдрийн <code>current_orders</code> {'<'} <code>max_orders</code> бөгөөд <code>closed=false</code> бол захиалга нэмэгдэнэ
           </li>
           <li>
-            Дээд хязгаарт хүрвэл checkout-д "Энэ өдөр бөглөгдсөн" warning гарна
+            Дээд хязгаарт хүрвэл checkout-д «Энэ өдөр бөглөгдсөн» warning гарна
           </li>
           <li>Захиалга цуцлагдвал capacity автоматаар буцаагдана</li>
         </ul>

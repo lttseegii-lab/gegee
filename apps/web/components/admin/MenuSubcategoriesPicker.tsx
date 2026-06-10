@@ -104,7 +104,7 @@ export function MenuSubcategoriesPicker({
   return (
     <div className="space-y-5">
       {/* Category tabs */}
-      <div className="flex gap-1 border-b border-border">
+      <div className="flex gap-1 border-b border-border overflow-x-auto">
         {(Object.keys(CATEGORY_LABELS) as CategoryKey[]).map((cat) => {
           const meta = CATEGORY_LABELS[cat];
           const isActive = activeCat === cat;
@@ -137,7 +137,7 @@ export function MenuSubcategoriesPicker({
             {list.map((sub, idx) => (
               <li
                 key={sub.key}
-                className="grid grid-cols-[1fr_1fr_auto_auto_auto] gap-3 items-center bg-offwhite rounded-lg px-3 py-2.5"
+                className="grid grid-cols-2 sm:grid-cols-[1fr_1fr_auto_auto_auto] gap-2 sm:gap-3 items-center bg-offwhite rounded-lg px-3 py-2.5"
               >
                 {/* Label */}
                 <input
