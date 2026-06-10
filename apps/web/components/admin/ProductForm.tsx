@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState, useTransition, useMemo } from 'react';
 import { createProduct, updateProduct, deleteProduct } from '@/app/admin/products/actions';
 import { aiImageUrl } from '@/lib/ai/pollinations';
+import { ProductImageUploader } from './ProductImageUploader';
 import type { Product } from '@/types/database';
 import type {
   MenuSubcategoriesMap,
@@ -237,7 +238,7 @@ export function ProductForm({
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
           <Field
             name="img_seed"
             label="Image seed"
@@ -247,13 +248,7 @@ export function ProductForm({
               setImgSeed(parseInt(e.target.value, 10) || 1000)
             }
           />
-          <Field
-            name="img_url"
-            label="Image URL (override)"
-            placeholder="https://..."
-            defaultValue={initial?.img_url ?? ''}
-            hint="хоосон бол Pollinations.ai-аас runtime татна"
-          />
+          <ProductImageUploader initialUrl={initial?.img_url ?? ''} />
         </div>
 
         <div className="flex items-center gap-6 flex-wrap">

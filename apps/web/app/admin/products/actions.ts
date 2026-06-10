@@ -32,6 +32,43 @@ function asArr(v: FormDataEntryValue | null): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Upload a product image to Storage (public `mega-images` bucket, admin-only)
+ * and return its public URL. The ProductForm stores this in `img_url`, which
+ * takes precedence over runtime Pollinations generation.
+ */
+export async function uploadProductImage(formData: FormData) {
+  try {
+    await assertAdmin();
+  } catch {
+    return { error: 'Forbidden' };
+  }
+
+  const file = formData.get('file');
+  if (!(file instanceof File)) return { error: 'Файл олдсонгүй' };
+  if (file.size === 0) return { error: 'Файл хоосон' };
+  if (file.size > 10 * 1024 * 1024)
+    return { error: 'Файл хэт том (10MB-ээс хэтэрсэн)' };
+  if (!file.type.startsWith('image/'))
+    return { error: 'Зөвхөн зураг оруулна уу' };
+
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().slice(0, 6);
+  const name = `product-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+  const svc = createServiceClient();
+  const { error: uploadErr } = await svc.storage
+    .from('mega-images')
+    .upload(name, file, {
+      contentType: file.type,
+      cacheControl: '3600',
+      upsert: false,
+    });
+  if (uploadErr) return { error: uploadErr.message };
+
+  const { data: pub } = svc.storage.from('mega-images').getPublicUrl(name);
+  return { ok: true, url: pub.publicUrl };
+}
+
 export async function createProduct(formData: FormData) {
   try {
     await assertAdmin();
