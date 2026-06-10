@@ -6,14 +6,22 @@
  * `products.img_url` set to CDN URL). For now, used as a fallback only.
  */
 
+// One canonical Pollinations size for ALL consumers. Pollinations caches by the
+// full URL (size included), so every distinct width/height was a separate, slow
+// flux generation — only the catalog's 600×600 stayed warm, which is why cart /
+// wishlist / order thumbnails (80/160/200) showed as broken. Images render
+// `unoptimized` + object-cover, so the source resolution is decoupled from the
+// displayed size; one shared size means one cached image reused everywhere.
+const POLLINATIONS_SIZE = 600;
+
 export function aiImageUrl(
   prompt: string,
   seed: number,
-  width: number = 600,
-  height: number = 600
+  _width: number = POLLINATIONS_SIZE,
+  _height: number = POLLINATIONS_SIZE
 ): string {
   const encoded = encodeURIComponent(prompt);
-  return `https://image.pollinations.ai/prompt/${encoded}?width=${width}&height=${height}&seed=${seed}&nologo=true&model=flux&enhance=true`;
+  return `https://image.pollinations.ai/prompt/${encoded}?width=${POLLINATIONS_SIZE}&height=${POLLINATIONS_SIZE}&seed=${seed}&nologo=true&model=flux&enhance=true`;
 }
 
 /**

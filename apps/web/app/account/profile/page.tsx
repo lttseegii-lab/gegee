@@ -75,10 +75,7 @@ export default async function ProfilePage() {
       <div className="text-[11px] uppercase tracking-[0.2em] text-pinkHot mb-3">
         Хэрэглэгчийн мэдээлэл
       </div>
-      <h1 className="font-serif text-4xl mb-2">Профайл</h1>
-      <p className="text-sm text-ink/60 mb-8">
-        Хувийн мэдээлэл, статистик, бүртгэлийн тохиргоо
-      </p>
+      <h1 className="font-serif text-4xl mb-8">Профайл</h1>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
