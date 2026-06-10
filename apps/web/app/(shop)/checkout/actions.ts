@@ -59,8 +59,8 @@ export async function createOrderFromCart(
 
   const { data, error } = await supabase.rpc('create_order_from_cart', {
     p_address_id: addressId,
-    p_notes: notes ?? null,
-    p_card_message: cardMessage ?? null,
+    p_notes: notes ?? undefined,
+    p_card_message: cardMessage ?? undefined,
     p_delivery: delivery ? (delivery as unknown as Json) : null,
   });
 

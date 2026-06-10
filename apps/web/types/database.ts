@@ -439,6 +439,27 @@ export type Database = {
         }
         Relationships: []
       }
+      qpay_token: {
+        Row: {
+          access_token: string
+          expires_at: string
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          expires_at: string
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          expires_at?: string
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rewards_ledger: {
         Row: {
           created_at: string
@@ -474,24 +495,18 @@ export type Database = {
           },
         ]
       }
-      qpay_token: {
+      schema_migrations: {
         Row: {
-          access_token: string
-          expires_at: string
-          id: boolean
-          updated_at: string
+          applied_at: string
+          version: string
         }
         Insert: {
-          access_token: string
-          expires_at: string
-          id?: boolean
-          updated_at?: string
+          applied_at?: string
+          version: string
         }
         Update: {
-          access_token?: string
-          expires_at?: string
-          id?: boolean
-          updated_at?: string
+          applied_at?: string
+          version?: string
         }
         Relationships: []
       }
@@ -572,14 +587,21 @@ export type Database = {
       create_order_from_cart: {
         Args: {
           p_address_id: number
-          p_notes?: string | null
-          p_card_message?: string | null
-          p_delivery?: Json | null
+          p_card_message?: string
+          p_delivery?: Json
+          p_notes?: string
         }
-        Returns: { order_id: number; order_code: string; total: number }[]
+        Returns: {
+          order_code: string
+          order_id: number
+          total: number
+        }[]
       }
+      expire_stale_pending_orders: { Args: { ttl?: string }; Returns: number }
+      gegeen_earn_rate: { Args: never; Returns: number }
       is_admin: { Args: never; Returns: boolean }
       merge_guest_cart: { Args: { items: Json }; Returns: undefined }
+      recompute_capacity: { Args: { target_date: string }; Returns: undefined }
       release_capacity: { Args: { target_date: string }; Returns: undefined }
       set_default_address: { Args: { addr_id: number }; Returns: undefined }
       todays_deliveries: {
