@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server';
-import { getTier, getNextTier } from '@/lib/rewards/tiers';
 import { getRewardsConfig } from '@/lib/rewards/getConfig';
 
 export const metadata = { title: 'Урамшууллын оноо' };
@@ -27,18 +26,6 @@ export default async function RewardsPage() {
 
   const totalPoints = rewards?.total_points ?? 0;
   const totalSpent = rewards?.total_spent ?? 0;
-  const currentTier = getTier(totalSpent);
-  const nextTier = getNextTier(currentTier.key);
-  const spentToNextTier = nextTier
-    ? Math.max(0, nextTier.minSpent - totalSpent)
-    : 0;
-  const progressPct = nextTier
-    ? Math.round(
-        ((totalSpent - currentTier.minSpent) /
-          (nextTier.minSpent - currentTier.minSpent)) *
-          100
-      )
-    : 100;
 
   return (
     <div className="max-w-3xl">
@@ -51,14 +38,9 @@ export default async function RewardsPage() {
         нь оноо болж нэмэгдэнэ.
       </p>
 
-      {/* Current tier hero */}
+      {/* Points summary */}
       <section className="bg-blush rounded-card p-8 mb-8 text-center">
-        <div className="text-5xl mb-3">{currentTier.icon}</div>
-        <div className="text-[11px] uppercase tracking-[0.2em] text-ink/50 mb-1">
-          Таны tier
-        </div>
-        <h2 className="font-serif italic text-3xl mb-3">{currentTier.label}</h2>
-        <div className="flex items-center justify-center gap-6 text-sm text-ink/70 mb-6">
+        <div className="flex items-center justify-center gap-6 text-sm text-ink/70">
           <div>
             <div className="text-[11px] uppercase tracking-wider text-ink/40">
               Цуглуулсан оноо
@@ -77,25 +59,6 @@ export default async function RewardsPage() {
             </div>
           </div>
         </div>
-
-        {nextTier ? (
-          <>
-            <div className="text-xs text-ink/60 mb-2">
-              Дараагийн tier <strong>{nextTier.label}</strong> хүртэл{' '}
-              <strong>{spentToNextTier.toLocaleString()}₮</strong> үлдсэн
-            </div>
-            <div className="h-2 bg-white rounded-full overflow-hidden mx-auto max-w-md">
-              <div
-                className="h-full bg-pinkHot transition-all"
-                style={{ width: `${Math.min(100, progressPct)}%` }}
-              />
-            </div>
-          </>
-        ) : (
-          <div className="text-xs text-goldDeep font-medium">
-            Хамгийн дээд tier нэрэмжит ✨
-          </div>
-        )}
       </section>
 
       {/* Recent activity */}
