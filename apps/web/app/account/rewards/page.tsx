@@ -40,6 +40,7 @@ export default async function RewardsPage() {
 
       {/* Points summary */}
       <section className="bg-blush rounded-card p-8 mb-8 text-center">
+        <div className="text-5xl mb-4">🌸</div>
         <div className="flex items-center justify-center gap-6 text-sm text-ink/70">
           <div>
             <div className="text-[11px] uppercase tracking-wider text-ink/40">
