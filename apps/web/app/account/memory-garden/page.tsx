@@ -118,10 +118,6 @@ export default async function MemoryGardenPage() {
           )}
         </>
       )}
-
-      <p className="text-xs text-ink/40 mt-12 italic text-center">
-        Care wildly. We&apos;re here for the little things that matter.
-      </p>
     </div>
   );
 }
