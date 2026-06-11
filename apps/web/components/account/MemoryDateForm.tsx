@@ -125,7 +125,7 @@ export function MemoryDateForm({
 
       <div>
         <label className="block text-xs uppercase tracking-wider text-ink/60 mb-1.5">
-          Жил (зөвхөн харгалзуулахын тулд)
+          Анхны он (заавал биш)
         </label>
         <input
           name="year"
@@ -137,7 +137,7 @@ export function MemoryDateForm({
           className="w-full border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-ink"
         />
         <p className="text-xs text-ink/40 mt-1">
-          Хэрэв ой тэмдэглэл бол анхны жил (50, 60 жилийн ой сэрэмжлүүлэхэд ашиглана)
+          Ойн он тооцоолоход ашиглана. Жишээ нь: хуримын 20 жилийн ой.
         </p>
       </div>
 
