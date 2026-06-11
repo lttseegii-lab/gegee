@@ -62,9 +62,7 @@ export default async function MemoryGardenPage() {
     <div className="max-w-3xl">
       <h1 className="font-serif text-4xl mb-2">Мартаж болохгүй өдрүүд</h1>
       <p className="text-sm text-ink/60 mb-8 max-w-prose">
-        Хайртай хүмүүсийнхээ чухал огноог хадгална уу. Ойртохоос 7 хоног + 1
-        хоног өмнө сануулга илгээж, тухайн event-д хүргүүлсэн цэцгийн түүхийг
-        хадгална.
+        Онцгой өдрөө хадгалаарай. Сануулах, бэлдэх, хүргэх ажлыг бид хариуцна.
       </p>
 
       <section className="mb-6">
