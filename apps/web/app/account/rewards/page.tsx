@@ -48,7 +48,7 @@ export default async function RewardsPage() {
         <strong className="text-ink">
           {rewardsConfig.earnRatePercent}%
         </strong>{' '}
-        нь оноо болж нэмэгдэнэ. Tier-ээс хамаарч давуу талууд нэмэгдэнэ.
+        нь оноо болж нэмэгдэнэ.
       </p>
 
       {/* Current tier hero */}
