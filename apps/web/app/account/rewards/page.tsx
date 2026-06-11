@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { TIERS, getTier, getNextTier } from '@/lib/rewards/tiers';
+import { getTier, getNextTier } from '@/lib/rewards/tiers';
 import { getRewardsConfig } from '@/lib/rewards/getConfig';
 
 export const metadata = { title: 'Урамшууллын оноо' };
@@ -96,51 +96,6 @@ export default async function RewardsPage() {
             Хамгийн дээд tier нэрэмжит ✨
           </div>
         )}
-      </section>
-
-      {/* All tiers ladder */}
-      <section className="mb-10">
-        <h3 className="font-medium text-sm uppercase tracking-wider text-ink/50 mb-3">
-          Бүх tier
-        </h3>
-        <ol className="space-y-2">
-          {TIERS.map((t) => {
-            const isCurrent = t.key === currentTier.key;
-            const unlocked = totalSpent >= t.minSpent;
-            return (
-              <li
-                key={t.key}
-                className={`flex items-center gap-4 p-4 border rounded-card ${
-                  isCurrent
-                    ? 'border-pinkHot bg-blush'
-                    : unlocked
-                      ? 'border-border bg-white'
-                      : 'border-border bg-offwhite opacity-60'
-                }`}
-              >
-                <div className="text-2xl">{t.icon}</div>
-                <div className="flex-1">
-                  <div className="font-medium">{t.label}</div>
-                  <div className="text-xs text-ink/60">
-                    {t.minSpent.toLocaleString()}₮
-                    {t.maxSpent != null
-                      ? ` - ${t.maxSpent.toLocaleString()}₮`
-                      : '+'}{' '}
-                    зарцуулсан · {t.multiplier}× оноо
-                  </div>
-                </div>
-                {isCurrent && (
-                  <span className="text-[10px] uppercase tracking-wider bg-pinkHot text-white px-2 py-1 rounded">
-                    Одоо
-                  </span>
-                )}
-                {!isCurrent && unlocked && (
-                  <span className="text-[10px] text-sageDeep">✓</span>
-                )}
-              </li>
-            );
-          })}
-        </ol>
       </section>
 
       {/* Recent activity */}
