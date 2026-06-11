@@ -124,7 +124,7 @@ function StatCard({
         accent ? 'bg-blush' : 'bg-offwhite'
       }`}
     >
-      <div className="font-serif text-3xl text-ink mb-1">{value}</div>
+      <div className="font-sans font-semibold tabular-nums text-3xl text-ink mb-1">{value}</div>
       <div className="text-[10px] uppercase tracking-wider text-ink/60">
         {label}
       </div>
