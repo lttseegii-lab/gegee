@@ -41,8 +41,14 @@ interface CartActions {
 const supabase = createClient();
 
 async function currentUserId(): Promise<string | null> {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id ?? null;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id ?? null;
+  } catch {
+    // A broken/expired refresh token must not crash cart hydration —
+    // treat it as anonymous and fall back to the localStorage cart.
+    return null;
+  }
 }
 
 export const useCartStore = create<CartState & CartActions>()(
@@ -192,7 +198,10 @@ export const useCartStore = create<CartState & CartActions>()(
         // their own cart products (incl. custom DIY) via RLS, so nothing
         // legitimate is dropped.
         const missing = items.filter((i) => !map[i.productId]);
-        if (missing.length > 0) {
+        // Only self-heal when the fetch actually returned at least one product.
+        // An empty result (transient error / broken session) must NOT wipe a
+        // valid cart — leave the items and let the drawer offer a remove button.
+        if (missing.length > 0 && (data?.length ?? 0) > 0) {
           set({ items: items.filter((i) => map[i.productId]), products: map });
           const uid = await currentUserId();
           if (uid) {

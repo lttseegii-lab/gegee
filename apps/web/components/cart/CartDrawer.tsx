@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -23,15 +23,30 @@ export function CartDrawer() {
   // Convert products record to Map (compatible with calcSubtotal)
   const products = new Map(Object.entries(productsRecord));
 
-  // If drawer is open and we have items but no product details, re-fetch.
-  // Handles the case where the user signed in after items were hydrated.
+  // When the drawer opens, fetch any missing product details exactly once.
+  // We intentionally depend only on `isOpen` — depending on items/products here
+  // caused an infinite refetch loop whenever a product couldn't be loaded.
+  // `resolved` flips once the fetch settles so the row UI can tell "still
+  // loading" apart from "permanently unavailable" (and offer a remove button).
+  const [resolved, setResolved] = useState(false);
   useEffect(() => {
-    if (!isOpen || items.length === 0) return;
+    if (!isOpen) {
+      setResolved(false);
+      return;
+    }
+    if (items.length === 0) {
+      setResolved(true);
+      return;
+    }
     const missing = items.some((i) => !productsRecord[i.productId]);
     if (missing) {
-      refreshProducts();
+      setResolved(false);
+      refreshProducts().finally(() => setResolved(true));
+    } else {
+      setResolved(true);
     }
-  }, [isOpen, items, productsRecord, refreshProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const subtotal = calcSubtotal(items, products);
   const delivery = calcDelivery(subtotal);
@@ -102,9 +117,31 @@ export function CartDrawer() {
               {items.map((item) => {
                 const p = products.get(item.productId);
                 if (!p) {
+                  // Still fetching → show a loader. Fetch finished but this
+                  // product never came back (deleted / inaccessible) → let the
+                  // user remove it instead of being stuck on "Loading…" forever.
+                  if (!resolved) {
+                    return (
+                      <li key={item.productId} className="p-4 text-ink/40 text-sm">
+                        Уншиж байна…
+                      </li>
+                    );
+                  }
                   return (
-                    <li key={item.productId} className="p-4 text-ink/40 text-sm">
-                      Loading…
+                    <li
+                      key={item.productId}
+                      className="p-5 flex items-center justify-between gap-3"
+                    >
+                      <span className="text-sm text-ink/50">
+                        Энэ бараа одоогоор боломжгүй байна
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => remove(item.productId)}
+                        className="text-xs text-ink/40 hover:text-pinkHot whitespace-nowrap"
+                      >
+                        Устгах
+                      </button>
                     </li>
                   );
                 }
