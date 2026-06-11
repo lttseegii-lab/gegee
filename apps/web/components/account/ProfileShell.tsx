@@ -15,7 +15,7 @@ type NavItem = {
 };
 
 const ITEMS: NavItem[] = [
-  { href: '/account/profile', label: 'Профайл', icon: '👤' },
+  { href: '/account/profile', label: 'Хэрэглэгчийн мэдээлэл', icon: '👤' },
   { href: '/account/memory-garden', label: 'Мартаж болохгүй өдрүүд', icon: '🌷' },
   { href: '/account/rewards', label: 'Урамшууллын оноо', icon: '🎁' },
   { href: '/account/orders', label: 'Захиалга', icon: '🔁' },
