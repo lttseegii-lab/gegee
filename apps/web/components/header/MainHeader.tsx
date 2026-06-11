@@ -96,11 +96,6 @@ export async function MainHeader() {
           <span className="flex items-center gap-1.5">
             🌸 100,000₮-аас дээш захиалгад үнэгүй хүргэлт
           </span>
-          <span className="hidden sm:flex items-center gap-4 text-ink/70">
-            <span>UB express delivery</span>
-            <span>·</span>
-            <span>Care wildly</span>
-          </span>
         </div>
       </div>
 
