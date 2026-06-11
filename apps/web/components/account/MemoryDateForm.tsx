@@ -154,15 +154,13 @@ export function MemoryDateForm({
         />
       </div>
 
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          name="reminders_enabled"
-          defaultChecked={initial?.reminders_enabled ?? true}
-          className="rounded"
-        />
-        Сануулга идэвхтэй (7 хоног + 1 хоног өмнө)
-      </label>
+      {/* Reminders are always part of the service — no visible toggle. Carry the
+          existing value (preserved when editing) so it's never accidentally flipped. */}
+      <input
+        type="hidden"
+        name="reminders_enabled"
+        value={String(initial?.reminders_enabled ?? true)}
+      />
 
       {error && (
         <div className="text-sm text-pinkHot bg-blush rounded-lg px-3 py-2">
