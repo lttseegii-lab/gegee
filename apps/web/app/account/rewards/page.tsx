@@ -98,21 +98,6 @@ export default async function RewardsPage() {
         )}
       </section>
 
-      {/* Current tier perks */}
-      <section className="mb-10">
-        <h3 className="font-medium text-sm uppercase tracking-wider text-ink/50 mb-3">
-          Таны давуу талууд
-        </h3>
-        <ul className="bg-white border border-border rounded-card p-5 space-y-2 text-sm">
-          {currentTier.perks.map((p, i) => (
-            <li key={i} className="flex gap-2">
-              <span className="text-pinkHot">✓</span>
-              <span>{p}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       {/* All tiers ladder */}
       <section className="mb-10">
         <h3 className="font-medium text-sm uppercase tracking-wider text-ink/50 mb-3">
