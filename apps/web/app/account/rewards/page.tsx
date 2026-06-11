@@ -101,7 +101,7 @@ export default async function RewardsPage() {
       {/* Recent activity */}
       <section>
         <h3 className="font-medium text-sm uppercase tracking-wider text-ink/50 mb-3">
-          Сүүлийн идэвхжилт
+          Онооны түүх
         </h3>
         {!history || history.length === 0 ? (
           <div className="bg-white border border-border rounded-card p-8 text-center text-sm text-ink/50">
