@@ -42,9 +42,6 @@ export default async function RewardsPage() {
 
   return (
     <div className="max-w-3xl">
-      <div className="text-[11px] uppercase tracking-[0.2em] text-pinkHot mb-3">
-        Урамшуулал
-      </div>
       <h1 className="font-serif text-4xl mb-2">Урамшууллын оноо</h1>
       <p className="text-sm text-ink/60 mb-8">
         Захиалгын дүнгийн{' '}

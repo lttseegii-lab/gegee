@@ -33,9 +33,6 @@ export default async function WishlistPage() {
 
   return (
     <div>
-      <div className="text-[11px] uppercase tracking-[0.2em] text-pinkHot mb-3">
-        Хүсэлтийн жагсаалт
-      </div>
       <h1 className="font-serif text-4xl mb-2">Хадгалсан</h1>
       <p className="text-sm text-ink/60 mb-8">
         {sorted.length === 0

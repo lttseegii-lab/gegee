@@ -43,9 +43,6 @@ export default async function OrdersPage() {
 
   return (
     <div className="max-w-3xl">
-      <div className="text-[11px] uppercase tracking-[0.2em] text-pinkHot mb-3">
-        Захиалгын түүх
-      </div>
       <h1 className="font-serif text-4xl mb-2">Захиалгууд</h1>
       <p className="text-sm text-ink/60 mb-8">
         Бүх захиалгын төлөв, нийт дүн
