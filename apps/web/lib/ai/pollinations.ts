@@ -39,3 +39,21 @@ export function productImageUrl(product: {
   }
   return '/placeholder.png';
 }
+
+/**
+ * Return up to `count` image URLs for a product.
+ * CDN products return a single-element array (no gallery yet).
+ * Pollinations products return `count` seed-varied URLs for the hover slider.
+ */
+export function productImageUrls(
+  product: { img_url: string | null; img_prompt: string | null; img_seed: number | null },
+  count = 4
+): string[] {
+  if (product.img_url) return [product.img_url];
+  if (product.img_prompt && product.img_seed != null) {
+    return Array.from({ length: count }, (_, i) =>
+      aiImageUrl(product.img_prompt!, product.img_seed! + i)
+    );
+  }
+  return ['/placeholder.png'];
+}
