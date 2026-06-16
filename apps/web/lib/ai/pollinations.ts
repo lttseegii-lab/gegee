@@ -46,9 +46,15 @@ export function productImageUrl(product: {
  * Pollinations products return `count` seed-varied URLs for the hover slider.
  */
 export function productImageUrls(
-  product: { img_url: string | null; img_prompt: string | null; img_seed: number | null },
+  product: {
+    img_url: string | null;
+    img_prompt: string | null;
+    img_seed: number | null;
+    gallery_urls?: string[] | null;
+  },
   count = 4
 ): string[] {
+  if (product.gallery_urls && product.gallery_urls.length > 0) return product.gallery_urls;
   if (product.img_url) return [product.img_url];
   if (product.img_prompt && product.img_seed != null) {
     return Array.from({ length: count }, (_, i) =>

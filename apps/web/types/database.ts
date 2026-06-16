@@ -346,6 +346,7 @@ export type Database = {
           badge: string | null
           created_at: string | null
           id: string
+          gallery_urls: string[] | null
           img_prompt: string | null
           img_seed: number | null
           img_url: string | null
@@ -363,6 +364,7 @@ export type Database = {
           active?: boolean | null
           badge?: string | null
           created_at?: string | null
+          gallery_urls?: string[] | null
           id: string
           img_prompt?: string | null
           img_seed?: number | null
@@ -381,6 +383,7 @@ export type Database = {
           active?: boolean | null
           badge?: string | null
           created_at?: string | null
+          gallery_urls?: string[] | null
           id?: string
           img_prompt?: string | null
           img_seed?: number | null

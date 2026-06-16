@@ -31,6 +31,16 @@ function asArr(v: FormDataEntryValue | null): string[] {
     .map((x) => x.trim())
     .filter(Boolean);
 }
+function asJsonArr(v: FormDataEntryValue | null): string[] {
+  const s = asStr(v);
+  if (!s) return [];
+  try {
+    const parsed = JSON.parse(s);
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
 
 /**
  * Upload a product image to Storage (public `mega-images` bucket, admin-only)
@@ -101,6 +111,7 @@ export async function createProduct(formData: FormData) {
     img_seed: asInt(formData.get('img_seed')) ?? null,
     img_prompt: asStr(formData.get('img_prompt')) || null,
     img_url: asStr(formData.get('img_url')) || null,
+    gallery_urls: asJsonArr(formData.get('gallery_urls')),
     active: asBool(formData.get('active')),
     is_gift_upsell: asBool(formData.get('is_gift_upsell')),
     is_card_upsell: asBool(formData.get('is_card_upsell')),
@@ -143,6 +154,7 @@ export async function updateProduct(id: string, formData: FormData) {
     img_seed: asInt(formData.get('img_seed')) ?? null,
     img_prompt: asStr(formData.get('img_prompt')) || null,
     img_url: asStr(formData.get('img_url')) || null,
+    gallery_urls: asJsonArr(formData.get('gallery_urls')),
     active: asBool(formData.get('active')),
     is_gift_upsell: asBool(formData.get('is_gift_upsell')),
     is_card_upsell: asBool(formData.get('is_card_upsell')),

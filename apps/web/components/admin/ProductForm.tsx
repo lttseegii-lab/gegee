@@ -6,6 +6,7 @@ import { useState, useTransition, useMemo } from 'react';
 import { createProduct, updateProduct, deleteProduct } from '@/app/admin/products/actions';
 import { aiImageUrl } from '@/lib/ai/pollinations';
 import { ProductImageUploader } from './ProductImageUploader';
+import { ProductGalleryUploader } from './ProductGalleryUploader';
 import type { Product } from '@/types/database';
 import type {
   MenuSubcategoriesMap,
@@ -250,6 +251,8 @@ export function ProductForm({
           />
           <ProductImageUploader initialUrl={initial?.img_url ?? ''} />
         </div>
+
+        <ProductGalleryUploader initialUrls={initial?.gallery_urls ?? []} />
 
         <div className="flex items-center gap-6 flex-wrap">
           <Toggle
