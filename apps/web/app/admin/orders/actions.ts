@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { assertAdmin } from '@/lib/auth/admin';
 import { signOrderPhoto } from '@/lib/storage/orderPhotos';
+import { sendSms } from '@/lib/sms/callpro';
+import { orderStatusSms } from '@/lib/sms/templates';
 import type { OrderStatus } from '@/types/database';
 
 const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
@@ -51,11 +53,36 @@ export async function updateOrderStatus(orderId: number, next: OrderStatus) {
   if (next === 'paid') updates.paid_at = new Date().toISOString();
   if (next === 'delivered') updates.delivered_at = new Date().toISOString();
 
-  const { error } = await svc
+  const { data: order, error } = await svc
     .from('orders')
     .update(updates)
-    .eq('id', orderId);
+    .eq('id', orderId)
+    .select('order_code, user_id')
+    .single();
   if (error) return { error: error.message };
+
+  // Send SMS notification (fire-and-forget — don't block the response)
+  const message = orderStatusSms(order.order_code ?? '', next);
+  if (message && order.user_id) {
+    const { data: profile } = await svc
+      .from('profiles')
+      .select('phone')
+      .eq('id', order.user_id)
+      .single();
+
+    const phone = profile?.phone;
+    if (phone) {
+      const result = await sendSms(phone, message);
+      await svc.from('sms_log').insert({
+        phone,
+        message,
+        type:   'order_status',
+        ref_id: String(orderId),
+        ok:     result.ok,
+        error:  result.error ?? null,
+      });
+    }
+  }
 
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath('/admin/orders');

@@ -531,6 +531,37 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_log: {
+        Row: {
+          id: number
+          created_at: string
+          phone: string
+          message: string
+          type: string
+          ref_id: string | null
+          ok: boolean
+          error: string | null
+        }
+        Insert: {
+          created_at?: string
+          phone: string
+          message: string
+          type: string
+          ref_id?: string | null
+          ok?: boolean
+          error?: string | null
+        }
+        Update: {
+          created_at?: string
+          phone?: string
+          message?: string
+          type?: string
+          ref_id?: string | null
+          ok?: boolean
+          error?: string | null
+        }
+        Relationships: []
+      }
       user_rewards: {
         Row: {
           tier: string | null

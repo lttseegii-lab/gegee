@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: '/admin/customers', label: 'Хэрэглэгч', icon: '👥' },
   { href: '/admin/rewards', label: 'Rewards', icon: '🌟' },
   { href: '/admin/capacity', label: 'Capacity', icon: '📅' },
+  { href: '/admin/notifications', label: 'Мэдэгдэл', icon: '💬' },
   { href: '/admin/theme', label: 'Theme', icon: '🎨' },
 ];
 
