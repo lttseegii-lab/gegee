@@ -345,6 +345,8 @@ export type Database = {
           active: boolean | null
           badge: string | null
           created_at: string | null
+          description: string | null
+          details: string[]
           id: string
           gallery_urls: string[] | null
           img_prompt: string | null
@@ -359,11 +361,14 @@ export type Database = {
           rating: number | null
           reviews: number | null
           tags: string[] | null
+          variants: string[]
         }
         Insert: {
           active?: boolean | null
           badge?: string | null
           created_at?: string | null
+          description?: string | null
+          details?: string[]
           gallery_urls?: string[] | null
           id: string
           img_prompt?: string | null
@@ -378,11 +383,14 @@ export type Database = {
           rating?: number | null
           reviews?: number | null
           tags?: string[] | null
+          variants?: string[]
         }
         Update: {
           active?: boolean | null
           badge?: string | null
           created_at?: string | null
+          description?: string | null
+          details?: string[]
           gallery_urls?: string[] | null
           id?: string
           img_prompt?: string | null
@@ -397,6 +405,7 @@ export type Database = {
           rating?: number | null
           reviews?: number | null
           tags?: string[] | null
+          variants?: string[]
         }
         Relationships: []
       }
@@ -530,6 +539,68 @@ export type Database = {
           value?: Json
         }
         Relationships: []
+      }
+      admin_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      product_sources: {
+        Row: {
+          cost: number
+          created_at: string
+          item_id: string
+          price_cny: number
+          product_id: string
+          sample: boolean
+          source: string
+          title_zh: string
+          url: string | null
+        }
+        Insert: {
+          cost: number
+          created_at?: string
+          item_id: string
+          price_cny: number
+          product_id: string
+          sample?: boolean
+          source: string
+          title_zh: string
+          url?: string | null
+        }
+        Update: {
+          cost?: number
+          created_at?: string
+          item_id?: string
+          price_cny?: number
+          product_id?: string
+          sample?: boolean
+          source?: string
+          title_zh?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_sources_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sms_log: {
         Row: {

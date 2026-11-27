@@ -9,6 +9,7 @@ import {
   type FilterDef,
 } from '@/lib/catalog';
 import { getMenuSubcategories } from '@/lib/theme/getTheme';
+import type { MenuSubcategoriesMap, MenuSubcategory } from '@/lib/theme/palette';
 import { resolveMood } from '@/lib/moods';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { SortDropdown } from '@/components/catalog/SortDropdown';
@@ -20,7 +21,14 @@ const VALID_CATEGORIES: CategoryKey[] = [
   'gifts',
   'cards',
   'subs',
+  'home',
 ];
+
+// Catalog categories without a mega-menu tab (e.g. 'home') have no admin-defined
+// subcategories, so look the key up loosely instead of assuming it exists.
+function subcategoriesFor(subs: MenuSubcategoriesMap, category: string): MenuSubcategory[] {
+  return (subs as Partial<Record<string, MenuSubcategory[]>>)[category] ?? [];
+}
 
 export async function generateMetadata({
   params,
@@ -63,7 +71,7 @@ export default async function CatalogPage({
   if (category !== 'all') {
     try {
       const subs = await getMenuSubcategories();
-      const catSubs = subs[category as Exclude<CategoryKey, 'all'>] ?? [];
+      const catSubs = subcategoriesFor(subs, category);
       const subTags = catSubs.map((s) => s.tag);
       const merged = Array.from(new Set([...(cfg.baseTags ?? []), ...subTags]));
       if (merged.length > 0) effectiveBaseTags = merged;
@@ -105,7 +113,7 @@ export default async function CatalogPage({
       // Look up admin-defined subcategory for a friendly label
       try {
         const subs = await getMenuSubcategories();
-        const catSubs = subs[category as Exclude<CategoryKey, 'all'>] ?? [];
+        const catSubs = subcategoriesFor(subs, category);
         const match = catSubs.find(
           (s) => s.tag === activeFilter || s.key === activeFilter
         );

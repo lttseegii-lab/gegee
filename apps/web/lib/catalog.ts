@@ -1,7 +1,7 @@
 // Catalog configuration — filter chip definitions per category
 // Ported from the prototype's catalogConfig (index.html ~line 10844)
 
-export type CategoryKey = 'all' | 'flowers' | 'plants' | 'gifts' | 'cards' | 'subs';
+export type CategoryKey = 'all' | 'flowers' | 'plants' | 'gifts' | 'cards' | 'subs' | 'home';
 
 export interface FilterDef {
   key: string;
@@ -33,6 +33,7 @@ export const CATALOG_CONFIG: Record<CategoryKey, CategoryConfig> = {
       { key: 'gifts', label: 'Бэлэг', tags: ['бэлэг', 'hamper', 'gift-set'] },
       { key: 'cards', label: 'Карт', tags: ['card', 'карт'] },
       { key: 'subs', label: 'Захиалга', tags: ['subscription', 'захиалга'] },
+      { key: 'home', label: 'Ор дэр', tags: ['home-textile'] },
       '__div__',
       { key: 'pet-safe', label: '🐾 Pet-safe', pet_safe: true },
       { key: 'new', label: 'Шинэ', tags: ['new'] },
@@ -119,6 +120,26 @@ export const CATALOG_CONFIG: Record<CategoryKey, CategoryConfig> = {
       { key: 'weekly', label: '7 хоног тутам', tags: ['weekly'] },
       { key: 'monthly', label: 'Сар тутам', tags: ['monthly'] },
       { key: 'premium', label: 'Premium', tags: ['premium', 'signature'] },
+    ],
+  },
+  // Bedding imported from Taobao (admin → Taobao импорт). Tags match
+  // lib/taobao/types.ts: every import carries 'home-textile' + its category.
+  home: {
+    title: 'Ор дэр',
+    description: 'Цагаан хэрэглэл, хөнжил, дэр, халад, алчуур',
+    baseTags: ['home-textile'],
+    filters: [
+      { key: 'all', label: 'Бүгд' },
+      '__div__',
+      { key: 'bedding', label: 'Цагаан хэрэглэл', tags: ['bedding'] },
+      { key: 'duvet', label: 'Хөнжил', tags: ['duvet'] },
+      { key: 'pillow', label: 'Дэр', tags: ['pillow'] },
+      { key: 'robe', label: 'Халад', tags: ['robe'] },
+      { key: 'towel', label: 'Алчуур', tags: ['towel'] },
+      '__div__',
+      { key: 'p-low', label: '80K хүртэл', priceMax: 80000 },
+      { key: 'p-mid', label: '80–150K', priceMin: 80000, priceMax: 150000 },
+      { key: 'p-high', label: '150K+', priceMin: 150000 },
     ],
   },
 };
