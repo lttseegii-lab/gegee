@@ -8,6 +8,9 @@ const nextConfig = {
       // Supabase Storage CDN (pre-rendered product images)
       { protocol: 'https', hostname: '*.supabase.co' },
       { protocol: 'https', hostname: '*.supabase.in' },
+      // Taobao listing photos (products imported via admin → Taobao импорт)
+      { protocol: 'https', hostname: '**.alicdn.com' },
+      { protocol: 'https', hostname: '**.tbcdn.cn' },
     ],
   },
   experimental: {

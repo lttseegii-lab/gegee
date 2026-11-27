@@ -37,6 +37,9 @@ export default async function ProductDetailPage({
 
   const imageUrl = productImageUrl(product, 1000, 1000);
   const stars = '★'.repeat(Math.floor(product.rating ?? 0));
+  // Tolerate a database that has not run migration 0027 yet (columns absent).
+  const details: string[] = product.details ?? [];
+  const variants: string[] = product.variants ?? [];
 
   return (
     <main className="max-w-container mx-auto px-6 py-10">
@@ -80,6 +83,10 @@ export default async function ProductDetailPage({
             )}
           </div>
 
+          {product.description && (
+            <p className="text-[15px] text-ink/75 leading-relaxed mb-6">{product.description}</p>
+          )}
+
           <div className="mb-8">
             <span className="text-[13px] text-ink/40 mr-2">эхлэл</span>
             <span className="text-3xl font-semibold">
@@ -91,6 +98,37 @@ export default async function ProductDetailPage({
             <AddToCartButton productId={product.id} variant="full" />
             <HeartButton productId={product.id} size="lg" />
           </div>
+
+          {details.length > 0 && (
+            <div className="mb-6">
+              <div className="text-[11px] uppercase tracking-wider text-ink/40 mb-2">
+                Үзүүлэлт
+              </div>
+              <ul className="text-sm text-ink/80 space-y-1.5">
+                {details.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {variants.length > 0 && (
+            <div className="mb-6">
+              <div className="text-[11px] uppercase tracking-wider text-ink/40 mb-2">
+                Сонголт
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {variants.map((v) => (
+                  <span
+                    key={v}
+                    className="text-xs px-2.5 py-1 rounded-full bg-offwhite border border-border"
+                  >
+                    {v}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {(product.tags?.length ?? 0) > 0 && (
             <div className="mb-6">
